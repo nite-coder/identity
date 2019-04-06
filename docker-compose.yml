@@ -16,3 +16,9 @@ services:
     image: redis
     ports:
       - 6379:6379
+  identity:
+    build: 
+      context: .
+      dockerfile: ./build/docker/dockerfile
+    ports:
+      - 12568:12568
