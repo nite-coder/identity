@@ -6,10 +6,10 @@ import (
 )
 
 type Account struct {
-	ID                    int64      `json:"id,omitempty" db:"id"`
-	UUID                  string     `json:"uuid,omitempty" db:"uuid"`
-	Namespace             string     `json:"namespace,omitempty" db:"namespace"`
-	Username              string     `json:"username,omitempty" db:"username"`
+	ID                    int64      `json:"id,omitempty" gorm:"column:id;primary_key"`
+	UUID                  string     `json:"uuid,omitempty" gorm:"column:uuid"`
+	Namespace             string     `json:"namespace,omitempty" gorm:"column:namespace"`
+	Username              string     `json:"username,omitempty" gorm:"column:username"`
 	PasswordHash          string     `json:"-" db:"password_hash"`
 	FirstName             string     `json:"first_name" db:"first_name"`
 	LastName              string     `json:"last_name" db:"last_name"`
@@ -28,8 +28,8 @@ type Account struct {
 	CreatorName           string
 	CreatedAt             *time.Time `json:"created_at,omitempty" db:"created_at"`
 	UpdaterID             int64
-	UpdatedAt             *time.Time `json:"updated_at,omitempty" db:"updated_at"`
 	UpdaterName           string
+	UpdatedAt             *time.Time `json:"updated_at,omitempty" db:"updated_at"`
 }
 
 type FindAccountOptions struct {
