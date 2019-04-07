@@ -9,13 +9,14 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.3.1
-	github.com/jasonsoft/identity v0.0.0-20190406112557-499dd7f39c9e
 	github.com/jasonsoft/log v0.0.0-20190402103012-8baab0dabcfa
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/jinzhu/now v1.0.0 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
+	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3 // indirect
 	google.golang.org/grpc v1.19.1
 	gopkg.in/yaml.v2 v2.2.2
 )
