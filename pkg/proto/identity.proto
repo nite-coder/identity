@@ -4,19 +4,30 @@ syntax = "proto3";
 package proto;
 
 message Account {
-  string ID = 1;
-  string App = 2;
-  string Username = 3;
-  string PasswordHash = 4;
-  string FirstName = 5;
-  string LastName = 6;
-  string ExternalID = 7;
-  bool IsLockedOut = 8;
-  int32 FailedPasswordAttempt = 9;
-  repeated string Roles = 10;
-  int32 LastLoginAt = 11;
-  int32 CreatedAt = 12;
-  int32 UpdatedAt = 13;
+  int64 ID = 1;
+  string UUID = 2;
+  string Namespace = 3;
+  string Username = 4;
+  string PasswordHash = 5;
+  string FirstName = 6;
+  string LastName = 7;
+  string Avatar = 8;
+  string Email = 9;
+  string Mobile = 10;
+  string ExternalID = 11;
+  bool IsLockedOut = 12;
+  int32 FailedPasswordAttempt = 13;
+  repeated string Roles = 14;
+  string ClientIP = 15;
+  string UserAgent = 16;
+  string Notes = 17;
+  int32 LastLoginAt = 18;
+  int64 CreatorID = 19;
+  string CreatorName = 20;
+  int32 CreatedAt = 21;
+  int64 UpdaterID = 22;
+  string UpdaterName = 23;
+  int32 UpdatedAt = 24;
 }
 
 message AccountByTokenRequest {
@@ -30,5 +41,5 @@ message EmptyReply {}
 
 
 service IdentityService {
-  rpc AccountByToken (AccountByTokenRequest) returns (Account) {}
+  rpc CreateAccount (Account) returns (Account) {}
 }

@@ -3,14 +3,17 @@ package service
 import (
 	"context"
 
-	"github.com/jasonsoft/wakanda/pkg/identity"
+	identity "identity/pkg"
 )
 
 type AccountService struct {
+	accountRepo identity.AccountRepository
 }
 
-func NewAccountService() *AccountService {
-	return &AccountService{}
+func NewAccountService(accountRepo identity.AccountRepository) *AccountService {
+	return &AccountService{
+		accountRepo: accountRepo,
+	}
 }
 func (svc *AccountService) Account(ctx context.Context, accountID string) (*identity.Account, error) {
 	panic("not implemented")
@@ -20,7 +23,7 @@ func (svc *AccountService) Accounts(ctx context.Context, opt *identity.FindAccou
 	panic("not implemented")
 }
 
-func (svc *AccountService) AccountCount(ctx context.Context, opt *identity.FindAccountOptions) (int, error) {
+func (svc *AccountService) CountAccounts(ctx context.Context, opt *identity.FindAccountOptions) (int, error) {
 	panic("not implemented")
 }
 

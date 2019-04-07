@@ -1,2 +1,4 @@
 /*.exe
 /mysql
+/cmd/identity
+/configs/app.yml

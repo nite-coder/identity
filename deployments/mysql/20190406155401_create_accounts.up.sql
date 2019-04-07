@@ -14,7 +14,7 @@ CREATE TABLE `accounts`  (
   `failed_password_attempt_count` int(11) NOT NULL,
   `client_ip` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `user_agent` varchar(512) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `note` varchar(512) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `notes` varchar(512) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `last_login_at` datetime(0) NOT NULL,
   `creator_id` int(11) NOT NULL,
   `creator_name` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,

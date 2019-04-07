@@ -1,0 +1,21 @@
+env: dev
+database:
+  address:
+  username:
+  password: 
+  dbname: identity_db
+nats:
+  address:
+  username:
+  password:
+redis:
+    address: localhost:6379
+    password:
+    db: 0 
+logs:
+  - name: clog
+    type: console
+    min_level: debug
+identity:
+  advertise_addr: "http://localhost:17486"
+  grpc_bind: ":17486"
