@@ -35,22 +35,22 @@ type Account struct {
 }
 
 type FindAccountOptions struct {
-	ID               string `json:"id" gorm:"id"`
-	ExternalID       string `json:"external_id" gorm:"external_id"`
-	App              string `json:"app" gorm:"app"`
-	Username         string `json:"username" gorm:"username"`
-	Email            string `json:"email,omitempty" gorm:"email"`
-	Mobile           string `json:"mobile,omitempty" gorm:"mobile"`
-	Role             string `json:"role"`
-	IsLockedOut      int    `json:"is_locked_out" gorm:"is_locked_out"`
-	Skip             int    `gorm:"skip"`
-	Take             int    `gorm:"take"`
-	SortBy           string `gorm:"sortby"`
-	Sort             string
-	CreatedTimeStart *time.Time `gorm:"created_start_time"`
-	CreatedTimeEnd   *time.Time `gorm:"created_end_time"`
-	LoginTimeStart   *time.Time `gorm:"login_start_time"`
-	LoginTimeEnd     *time.Time `gorm:"login_end_time"`
+	ID               string     `json:"id,omitempty" gorm:"id"`
+	ExternalID       string     `json:"external_id,omitempty" gorm:"external_id"`
+	App              string     `json:"app,omitempty" gorm:"app"`
+	Username         string     `json:"username,omitempty" gorm:"username"`
+	Email            string     `json:"email,omitempty" gorm:"email"`
+	Mobile           string     `json:"mobile,omitempty" gorm:"mobile"`
+	Role             string     `json:"role,omitempty"`
+	IsLockedOut      int        `json:"is_locked_out,omitempty" gorm:"is_locked_out"`
+	Skip             int        `gorm:"skip" json:"skip,omitempty"`
+	Take             int        `gorm:"take" json:"take,omitempty"`
+	SortBy           string     `gorm:"sortby" json:"sort_by,omitempty"`
+	Sort             string     `json:"sort,omitempty"`
+	CreatedTimeStart *time.Time `gorm:"created_start_time" json:"created_time_start,omitempty"`
+	CreatedTimeEnd   *time.Time `gorm:"created_end_time" json:"created_time_end,omitempty"`
+	LoginTimeStart   *time.Time `gorm:"login_start_time" json:"login_time_start,omitempty"`
+	LoginTimeEnd     *time.Time `gorm:"login_end_time" json:"login_time_end,omitempty"`
 }
 
 type AccountServicer interface {
