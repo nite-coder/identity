@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"identity/internal/config"
+	"identity/internal/pkg/config"
 	identityGRPC "identity/pkg/identity/delivery/grpc"
 	identityDatabase "identity/pkg/identity/repository/database"
 	identitySvc "identity/pkg/identity/service"

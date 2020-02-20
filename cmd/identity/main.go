@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"identity/internal/config"
+	"identity/internal/pkg/config"
 	identityProto "identity/pkg/identity/proto"
 	"net"
 	"runtime"

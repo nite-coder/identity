@@ -2,6 +2,44 @@ syntax = "proto3";
 
 package proto;
 
+service IdentityService {
+    rpc Account (AccountRequest) returns (AccountResponse);
+    rpc AccountByUUID (AccountByUUIDRequest) returns (AccountByUUIDResponse);
+    rpc Accounts (AccountsRequest) returns (AccountsResponse);
+    rpc CountAccounts (CountAccountsRequest) returns (CountAccountsResponse);
+    rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
+    rpc UpdateAccount (UpdateAccountRequest) returns (UpdateAccountResponse);
+    rpc UpdateAccountPassword (UpdateAccountPasswordRequest) returns (UpdateAccountPasswordResponse);
+    rpc ForcedUpdatePassword (ForcedUpdatePasswordRequest) returns (ForcedUpdatePasswordResponse);
+    rpc LockAccount (LockAccountRequest) returns (LockAccountResponse);
+    rpc LockAccounts (LockAccountsRequest) returns (LockAccountsResponse);
+    rpc UnlockAccount (UnlockAccountRequest) returns (UnlockAccountResponse);
+    rpc DeleteAccount (DeleteAccountRequest) returns (DeleteAccountResponse);
+    rpc Login (LoginRequest) returns (LoginResponse);
+    rpc ClearOTP (ClearOTPRequest) returns (ClearOTPResponse);
+    rpc GenerateOTPAuth (GenerateOTPAuthRequest) returns (GenerateOTPAuthResponse);
+    rpc SetOTPExpireTime (SetOTPExpireTimeRequest) returns (SetOTPExpireTimeResponse);
+    rpc VerifyOTP (VerifyOTPRequest) returns (VerifyOTPResponse);
+
+    rpc Role (RoleRequest) returns (RoleResponse);
+    rpc Roles (RolesRequest) returns (RolesResponse);
+    rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
+    rpc UpdateRole (UpdateRoleRequest) returns (UpdateRoleResponse);
+    rpc UpdateAccountRole (UpdateAccountRoleRequest) returns (UpdateAccountRoleResponse);
+    rpc AccountRoles (AccountRolesRequest) returns (AccountRolesResponse);
+
+    rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse);
+    rpc CreateRefreshToken (CreateRefreshTokenRequest) returns (CreateRefreshTokenResponse);
+    rpc Token (TokenRequest) returns (TokenResponse);
+    rpc DeleteTokenByRoleName (DeleteTokenByRoleNameRequest) returns (DeleteTokenByRoleNameResponse);
+    rpc DeleteTokenByAccountID (DeleteTokenByAccountIDRequest) returns (DeleteTokenByAccountIDResponse);
+    rpc RenewToken (RenewTokenRequest) returns (RenewTokenResponse);
+    rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse);
+    rpc BindHashToken (BindHashTokenRequest) returns (BindHashTokenResponse);
+    rpc DeleteHash (DeleteHashRequest) returns (DeleteHashResponse);
+}
+
+
 message Account {
     int64 id = 1;
     string uuid = 2;
@@ -95,45 +133,6 @@ message Token {
     int32 account_type = 7;
     int64 refresh_expires_in = 8;
 }
-
-
-service IdentityService {
-    rpc Account (AccountRequest) returns (AccountResponse);
-    rpc AccountByUUID (AccountByUUIDRequest) returns (AccountByUUIDResponse);
-    rpc Accounts (AccountsRequest) returns (AccountsResponse);
-    rpc CountAccounts (CountAccountsRequest) returns (CountAccountsResponse);
-    rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
-    rpc UpdateAccount (UpdateAccountRequest) returns (UpdateAccountResponse);
-    rpc UpdateAccountPassword (UpdateAccountPasswordRequest) returns (UpdateAccountPasswordResponse);
-    rpc ForcedUpdatePassword (ForcedUpdatePasswordRequest) returns (ForcedUpdatePasswordResponse);
-    rpc LockAccount (LockAccountRequest) returns (LockAccountResponse);
-    rpc LockAccounts (LockAccountsRequest) returns (LockAccountsResponse);
-    rpc UnlockAccount (UnlockAccountRequest) returns (UnlockAccountResponse);
-    rpc DeleteAccount (DeleteAccountRequest) returns (DeleteAccountResponse);
-    rpc Login (LoginRequest) returns (LoginResponse);
-    rpc ClearOTP (ClearOTPRequest) returns (ClearOTPResponse);
-    rpc GenerateOTPAuth (GenerateOTPAuthRequest) returns (GenerateOTPAuthResponse);
-    rpc SetOTPExpireTime (SetOTPExpireTimeRequest) returns (SetOTPExpireTimeResponse);
-    rpc VerifyOTP (VerifyOTPRequest) returns (VerifyOTPResponse);
-
-    rpc Role (RoleRequest) returns (RoleResponse);
-    rpc Roles (RolesRequest) returns (RolesResponse);
-    rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
-    rpc UpdateRole (UpdateRoleRequest) returns (UpdateRoleResponse);
-    rpc UpdateAccountRole (UpdateAccountRoleRequest) returns (UpdateAccountRoleResponse);
-    rpc AccountRoles (AccountRolesRequest) returns (AccountRolesResponse);
-
-    rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse);
-    rpc CreateRefreshToken (CreateRefreshTokenRequest) returns (CreateRefreshTokenResponse);
-    rpc Token (TokenRequest) returns (TokenResponse);
-    rpc DeleteTokenByRoleName (DeleteTokenByRoleNameRequest) returns (DeleteTokenByRoleNameResponse);
-    rpc DeleteTokenByAccountID (DeleteTokenByAccountIDRequest) returns (DeleteTokenByAccountIDResponse);
-    rpc RenewToken (RenewTokenRequest) returns (RenewTokenResponse);
-    rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse);
-    rpc BindHashToken (BindHashTokenRequest) returns (BindHashTokenResponse);
-    rpc DeleteHash (DeleteHashRequest) returns (DeleteHashResponse);
-}
-
 
 message AccountRequest {
     int64 account_id = 1;

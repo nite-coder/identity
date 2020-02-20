@@ -12,6 +12,7 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/rotisserie/eris v0.3.0
 	golang.org/x/net v0.0.0-20200219183655-46282727080f // indirect
 	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
 	golang.org/x/text v0.3.2 // indirect
