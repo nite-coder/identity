@@ -1,0 +1,389 @@
+syntax = "proto3";
+
+package proto;
+
+message Account {
+    int64 id = 1;
+    string uuid = 2;
+    string namespace = 3;
+    string username = 4;
+    string password_encrypt = 5;
+    bool otp_enable = 6;
+    string otp_secret = 7;
+    int64 otp_effective_at = 8;
+    string first_name = 9;
+    string last_name = 10;
+    string avatar = 11;
+    string email = 12;
+    string mobile = 13;
+    string external_id = 14;
+    int32 is_locked_out = 15;
+    int32 failed_password_attempt = 16;
+    string client_ip = 17;
+    string user_agent = 18;
+    string notes = 19;
+    int64 last_login_at = 20;
+    bool is_admin = 21;
+    repeated Role roles = 22;
+    common common = 23;
+    int32 type = 24;
+}
+
+message Role {
+    int64 id = 1;
+    string uuid = 2;
+    string namespace = 3;
+    string name = 4;
+    string rule_json = 5;
+    common common = 6;
+}
+
+message Rule {
+    string namespace = 1;
+    repeated string resources = 2;
+    repeated string resource_names = 3;
+    repeated string verbs = 4;
+    common common = 5;
+}
+
+message FindAccountOptions {
+    int64 id = 1;
+    string uuid = 2;
+    string external_id = 3;
+    string namespace = 4;
+    string username = 5;
+    string email = 6;
+    string mobile = 7;
+    repeated string role = 8;
+    int32 is_locked_out = 9;
+    int32 offset = 10;
+    int32 limit = 11;
+    string sort_by = 12;
+    string sort = 13;
+    int64 created_time_start = 14;
+    int64 created_time_end = 15;
+    int64 login_time_start = 16;
+    int64 login_time_end = 17;
+    string first_name = 18;
+    string keyword = 19;
+    int32 type = 20;
+}
+
+message common {
+    int64 creator_id = 1;
+    string creator_name = 2;
+    int64 created_at = 3;
+    int64 updater_id = 4;
+    string updater_name = 5;
+    int64 updated_at = 6;
+    int32 data_state = 7;
+}
+
+message LoginInfo {
+    string namespace = 1;
+    string username = 2;
+    string password = 3;
+}
+
+message Token {
+    int64 account_id = 1;
+    string namespace = 2;
+    int64 expires_in = 3;
+    string token_string = 4;
+    map<string, string> claims = 5;
+    string username = 6;
+    int32 account_type = 7;
+    int64 refresh_expires_in = 8;
+}
+
+
+service IdentityService {
+    rpc Account (AccountRequest) returns (AccountResponse);
+    rpc AccountByUUID (AccountByUUIDRequest) returns (AccountByUUIDResponse);
+    rpc Accounts (AccountsRequest) returns (AccountsResponse);
+    rpc CountAccounts (CountAccountsRequest) returns (CountAccountsResponse);
+    rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
+    rpc UpdateAccount (UpdateAccountRequest) returns (UpdateAccountResponse);
+    rpc UpdateAccountPassword (UpdateAccountPasswordRequest) returns (UpdateAccountPasswordResponse);
+    rpc ForcedUpdatePassword (ForcedUpdatePasswordRequest) returns (ForcedUpdatePasswordResponse);
+    rpc LockAccount (LockAccountRequest) returns (LockAccountResponse);
+    rpc LockAccounts (LockAccountsRequest) returns (LockAccountsResponse);
+    rpc UnlockAccount (UnlockAccountRequest) returns (UnlockAccountResponse);
+    rpc DeleteAccount (DeleteAccountRequest) returns (DeleteAccountResponse);
+    rpc Login (LoginRequest) returns (LoginResponse);
+    rpc ClearOTP (ClearOTPRequest) returns (ClearOTPResponse);
+    rpc GenerateOTPAuth (GenerateOTPAuthRequest) returns (GenerateOTPAuthResponse);
+    rpc SetOTPExpireTime (SetOTPExpireTimeRequest) returns (SetOTPExpireTimeResponse);
+    rpc VerifyOTP (VerifyOTPRequest) returns (VerifyOTPResponse);
+
+    rpc Role (RoleRequest) returns (RoleResponse);
+    rpc Roles (RolesRequest) returns (RolesResponse);
+    rpc CreateRole (CreateRoleRequest) returns (CreateRoleResponse);
+    rpc UpdateRole (UpdateRoleRequest) returns (UpdateRoleResponse);
+    rpc UpdateAccountRole (UpdateAccountRoleRequest) returns (UpdateAccountRoleResponse);
+    rpc AccountRoles (AccountRolesRequest) returns (AccountRolesResponse);
+
+    rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse);
+    rpc CreateRefreshToken (CreateRefreshTokenRequest) returns (CreateRefreshTokenResponse);
+    rpc Token (TokenRequest) returns (TokenResponse);
+    rpc DeleteTokenByRoleName (DeleteTokenByRoleNameRequest) returns (DeleteTokenByRoleNameResponse);
+    rpc DeleteTokenByAccountID (DeleteTokenByAccountIDRequest) returns (DeleteTokenByAccountIDResponse);
+    rpc RenewToken (RenewTokenRequest) returns (RenewTokenResponse);
+    rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse);
+    rpc BindHashToken (BindHashTokenRequest) returns (BindHashTokenResponse);
+    rpc DeleteHash (DeleteHashRequest) returns (DeleteHashResponse);
+}
+
+
+message AccountRequest {
+    int64 account_id = 1;
+}
+message AccountResponse {
+    Account account = 1;
+}
+
+message AccountByUUIDRequest {
+    string account_uuid = 1;
+}
+message AccountByUUIDResponse {
+    Account account = 1;
+}
+
+message AccountsRequest {
+    FindAccountOptions find_account_options = 1;
+}
+message AccountsResponse {
+    repeated Account account = 1;
+}
+
+message CountAccountsRequest {
+    FindAccountOptions find_account_options = 1;
+}
+message CountAccountsResponse {
+    int32 account_counts = 1;
+}
+
+message CreateAccountRequest {
+    Account account = 1;
+}
+message CreateAccountResponse {
+    Account account = 1;
+}
+
+message UpdateAccountRequest {
+    Account account = 1;
+}
+message UpdateAccountResponse {
+}
+
+message UpdateAccountPasswordRequest {
+    int64 account_id = 1;
+    string old_password = 2;
+    string new_password = 3;
+    int64 updater_account_id = 4;
+    string updater_username = 5;
+}
+message UpdateAccountPasswordResponse {
+}
+
+message ForcedUpdatePasswordRequest {
+    int64 account_id = 1;
+    string new_password = 2;
+    int64 updater_account_id = 4;
+    string updater_username = 5;
+}
+message ForcedUpdatePasswordResponse {
+}
+
+message LockAccountRequest {
+    int64 account_id = 1;
+    int32 locked_type = 2;
+    int64 updater_account_id = 3;
+    string updater_username = 4;
+}
+message LockAccountResponse {
+}
+
+message LockAccountsRequest {
+    repeated int64 account_ids = 1;
+    repeated int32 locked_types = 2;
+    int64 updater_account_id = 3;
+    string updater_username = 4;
+}
+message LockAccountsResponse {
+}
+
+message UnlockAccountRequest {
+    int64 account_id = 1;
+    int64 updater_account_id = 2;
+    string updater_username = 3;
+}
+message UnlockAccountResponse {
+}
+
+
+message DeleteAccountRequest {
+    int64 account_id = 1;
+    int64 updater_account_id = 2;
+    string updater_username = 3;
+}
+
+message DeleteAccountResponse {
+}
+
+message LoginRequest {
+    LoginInfo login_info = 1;
+}
+message LoginResponse {
+    Account account = 1;
+}
+
+message ClearOTPRequest {
+    string account_uuid = 1;
+}
+message ClearOTPResponse {
+}
+
+message GenerateOTPAuthRequest {
+    int64 account_id = 1;
+}
+message GenerateOTPAuthResponse {
+    string otp_token = 1;
+    string otp_qrcode_path = 2;
+}
+
+message SetOTPExpireTimeRequest {
+    string account_uuid = 1;
+    int64 duration = 2;
+}
+message SetOTPExpireTimeResponse {
+}
+
+message VerifyOTPRequest {
+    string account_uuid = 1;
+    string otp_code = 2;
+}
+message VerifyOTPResponse {
+    Account account = 1;
+}
+
+
+message RoleRequest {
+    int64 role_id = 1;
+}
+message RoleResponse {
+    Role role = 1;
+}
+
+
+message RolesRequest {
+    string namespace = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+    string sort= 4;
+}
+message RolesResponse {
+    repeated Role roles = 1;
+    int32 count = 2;
+    int32 current_page = 3;
+}
+
+message CreateRoleRequest {
+    Role role = 1;
+}
+message CreateRoleResponse {
+}
+
+message UpdateRoleRequest {
+    Role role = 1;
+}
+message UpdateRoleResponse {
+}
+
+message AccountRolesRequest {
+    int64 account_id = 1;
+}
+
+message AccountRolesResponse {
+    repeated Role roles = 1;
+}
+
+message UpdateAccountRoleRequest {
+    int64 account_id = 1;
+    repeated int64 roles_id = 2;
+    int64 updater_account_id = 3;
+    string updater_username = 4;
+}
+message UpdateAccountRoleResponse {
+}
+
+message CreateTokenRequest {
+    Token token = 1;
+    string namespace =2;            //如果有帶, token的key變成 namespace+accountID
+}
+message CreateTokenResponse {
+    string token = 1; //need to discard
+    string access_key = 2;
+    string refresh_key = 3;
+}
+
+message TokenRequest {
+    string token_key = 1;
+}
+message TokenResponse {
+    Token token = 1;
+}
+
+message DeleteTokenByRoleNameRequest {
+    string namespace = 1;
+    string role_name = 2;
+
+}
+message DeleteTokenByRoleNameResponse {
+}
+
+message DeleteTokenByAccountIDRequest {
+    int64 account_id = 1;
+    string namespace =2;
+}
+message DeleteTokenByAccountIDResponse {
+}
+
+message RenewTokenRequest {
+    string token_key = 1;
+    int64 duration = 2;
+}
+message RenewTokenResponse {
+}
+
+message CreateRefreshTokenRequest {
+    Token token = 1;
+}
+
+message CreateRefreshTokenResponse {
+    string token = 1;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+    string auth_token = 1;
+    string refresh_token = 2;
+}
+
+message BindHashTokenRequest{
+    string hash_key = 1;
+    string access_token_key = 2;
+}
+
+message BindHashTokenResponse{
+}
+
+message DeleteHashRequest{
+    string hash_key = 1;
+}
+
+message DeleteHashResponse{
+}

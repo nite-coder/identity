@@ -1,0 +1,1 @@
+go build -o identity.exe && "identity.exe"

@@ -1,4 +1,5 @@
-/*.exe
+*.exe
+*.exe~
+*.test
 /mysql
-/cmd/identity
 /configs/app.yml

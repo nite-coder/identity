@@ -7,7 +7,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/kelseyhightower/envconfig"
 	yaml "gopkg.in/yaml.v2"
+)
+
+var (
+	// EnvPrefix is prefix for identity
+	EnvPrefix string
 )
 
 type LogSetting struct {
@@ -44,23 +50,27 @@ type Configuration struct {
 	}
 }
 
-func New(fileName string) *Configuration {
+func New(fileName string) Configuration {
 	flag.Parse()
 	c := Configuration{}
 
-	//read and parse config file
-	rootDirPath, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		stdlog.Fatalf("config: file error: %s", err.Error())
+	rootDirPath := os.Getenv("IDENTITY_HOME")
+	if rootDirPath == "" {
+		//read and parse config file
+		rootDirPathStr, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			stdlog.Fatalf("config: file error: %s", err.Error())
+		}
+		rootDirPath = rootDirPathStr
 	}
-	configPath := filepath.Join(rootDirPath, fileName)
-	_, err = os.Stat(configPath)
+	configPath := filepath.Join(rootDirPath, "configs", fileName)
+	_, err := os.Stat(configPath)
 	if err != nil {
 		stdlog.Fatalf("config: file error: %s", err.Error())
 	}
 
 	// config exists
-	file, err := ioutil.ReadFile(configPath)
+	file, err := ioutil.ReadFile(filepath.Clean(configPath))
 	if err != nil {
 		stdlog.Fatalf("config: read file error: %s", err.Error())
 	}
@@ -70,5 +80,13 @@ func New(fileName string) *Configuration {
 		stdlog.Fatal("config: yaml unmarshal error:", err)
 	}
 
-	return &c
+	if EnvPrefix == "" {
+		stdlog.Fatal("config: env prefix not set")
+	}
+
+	if err := envconfig.Process(EnvPrefix, &c); err != nil {
+		stdlog.Fatal("config: env failed:", err)
+	}
+
+	return c
 }
