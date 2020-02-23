@@ -85,6 +85,8 @@ github.com/jasonsoft/log v0.0.0-20190402103012-8baab0dabcfa h1:9e0L00SvD50MBbbJV
 github.com/jasonsoft/log v0.0.0-20190402103012-8baab0dabcfa/go.mod h1:I6xAidv1HqjUK96ALtLY8RM2CJw2GGt6bAXbI4WZPGo=
 github.com/jasonsoft/log v1.0.1 h1:07klnWxL+wt3Tp5rT0bd4cCe3+FJFOov69DX9NBOg9Y=
 github.com/jasonsoft/log v1.0.1/go.mod h1:mRtzyZmCzWrMLAZYujc9/A5eHoo1jC68oRPACvR3/no=
+github.com/jasonsoft/log v1.0.2 h1:FvWnBlzgUm3y5t2567mR+Ww5YyfwvBqU3buQNeEY9Q4=
+github.com/jasonsoft/log v1.0.2/go.mod h1:mRtzyZmCzWrMLAZYujc9/A5eHoo1jC68oRPACvR3/no=
 github.com/jellevandenhooff/dkim v0.0.0-20150330215556-f50fe3d243e1/go.mod h1:E0B/fFc00Y+Rasa88328GlI/XbtyysCtTHZS8h7IrBU=
 github.com/jinzhu/gorm v1.9.2 h1:lCvgEaqe/HVE+tjAR2mt4HbbHAZsQOv3XAZiEZV37iw=
 github.com/jinzhu/gorm v1.9.2/go.mod h1:Vla75njaFJ8clLU1W44h34PjIkijhjHIYnZxMqCdxqo=

@@ -2,9 +2,10 @@ syntax = "proto3";
 
 package proto;
 
+import "google/protobuf/timestamp.proto";
+
 service IdentityService {
     rpc Account (AccountRequest) returns (AccountResponse);
-    rpc AccountByUUID (AccountByUUIDRequest) returns (AccountByUUIDResponse);
     rpc Accounts (AccountsRequest) returns (AccountsResponse);
     rpc CountAccounts (CountAccountsRequest) returns (CountAccountsResponse);
     rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
@@ -41,8 +42,7 @@ service IdentityService {
 
 
 message Account {
-    int64 id = 1;
-    string uuid = 2;
+    string id = 1;
     string namespace = 3;
     string username = 4;
     string password_encrypt = 5;
@@ -63,17 +63,26 @@ message Account {
     int64 last_login_at = 20;
     bool is_admin = 21;
     repeated Role roles = 22;
-    common common = 23;
     int32 type = 24;
+    string creator_id = 25;
+    string creator_name = 26;
+    google.protobuf.Timestamp created_at = 27;
+    string updater_id = 28;
+    string updater_name = 29;
+    google.protobuf.Timestamp updated_at = 30;
 }
 
 message Role {
-    int64 id = 1;
-    string uuid = 2;
+    string id = 1;
     string namespace = 3;
     string name = 4;
-    string rule_json = 5;
-    common common = 6;
+    repeated Rule rules = 5;
+    string creator_id = 6;
+    string creator_name = 7;
+    google.protobuf.Timestamp created_at = 8;
+    string updater_id = 9;
+    string updater_name = 10;
+    google.protobuf.Timestamp updated_at = 11;
 }
 
 message Rule {
@@ -81,47 +90,30 @@ message Rule {
     repeated string resources = 2;
     repeated string resource_names = 3;
     repeated string verbs = 4;
-    common common = 5;
 }
 
 message FindAccountOptions {
     int64 id = 1;
-    string uuid = 2;
     string external_id = 3;
     string namespace = 4;
     string username = 5;
     string email = 6;
     string mobile = 7;
-    repeated string role = 8;
+    repeated string roles = 8;
     int32 is_locked_out = 9;
-    int32 offset = 10;
-    int32 limit = 11;
+    int32 page = 10;
+    int32 per_page = 11;
     string sort_by = 12;
     string sort = 13;
-    int64 created_time_start = 14;
-    int64 created_time_end = 15;
-    int64 login_time_start = 16;
-    int64 login_time_end = 17;
+    int64 created_at_start = 14;
+    int64 created_at_end = 15;
+    int64 login_at_start = 16;
+    int64 login_at_end = 17;
     string first_name = 18;
     string keyword = 19;
     int32 type = 20;
 }
 
-message common {
-    int64 creator_id = 1;
-    string creator_name = 2;
-    int64 created_at = 3;
-    int64 updater_id = 4;
-    string updater_name = 5;
-    int64 updated_at = 6;
-    int32 data_state = 7;
-}
-
-message LoginInfo {
-    string namespace = 1;
-    string username = 2;
-    string password = 3;
-}
 
 message Token {
     int64 account_id = 1;
@@ -135,24 +127,18 @@ message Token {
 }
 
 message AccountRequest {
-    int64 account_id = 1;
+    int64 id = 1;
 }
 message AccountResponse {
     Account account = 1;
 }
 
-message AccountByUUIDRequest {
-    string account_uuid = 1;
-}
-message AccountByUUIDResponse {
-    Account account = 1;
-}
 
 message AccountsRequest {
     FindAccountOptions find_account_options = 1;
 }
 message AccountsResponse {
-    repeated Account account = 1;
+    repeated Account accounts = 1;
 }
 
 message CountAccountsRequest {
@@ -231,7 +217,9 @@ message DeleteAccountResponse {
 }
 
 message LoginRequest {
-    LoginInfo login_info = 1;
+    string namespace = 1;
+    string username = 2;
+    string password = 3;
 }
 message LoginResponse {
     Account account = 1;
@@ -277,14 +265,13 @@ message RoleResponse {
 
 message RolesRequest {
     string namespace = 1;
-    int32 offset = 2;
-    int32 limit = 3;
-    string sort= 4;
+    string account_id = 2;
+    int32 page = 3;
+    int32 per_page = 4;
+    string sort= 5;
 }
 message RolesResponse {
     repeated Role roles = 1;
-    int32 count = 2;
-    int32 current_page = 3;
 }
 
 message CreateRoleRequest {
