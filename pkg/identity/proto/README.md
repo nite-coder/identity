@@ -1,1 +1,1 @@
-protoc pkg/identity/proto/identity.proto --go_out=plugins=grpc:.
+protoc pkg/identity/proto/*.proto --go_out=plugins=grpc:.

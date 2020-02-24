@@ -93,7 +93,7 @@ message Rule {
 }
 
 message FindAccountOptions {
-    int64 id = 1;
+    string id = 1;
     string external_id = 3;
     string namespace = 4;
     string username = 5;
@@ -127,7 +127,7 @@ message Token {
 }
 
 message AccountRequest {
-    int64 id = 1;
+    string id = 1;
 }
 message AccountResponse {
     Account account = 1;
@@ -166,7 +166,7 @@ message UpdateAccountPasswordRequest {
     string old_password = 2;
     string new_password = 3;
     int64 updater_account_id = 4;
-    string updater_username = 5;
+    string updater_name = 5;
 }
 message UpdateAccountPasswordResponse {
 }
@@ -175,7 +175,7 @@ message ForcedUpdatePasswordRequest {
     int64 account_id = 1;
     string new_password = 2;
     int64 updater_account_id = 4;
-    string updater_username = 5;
+    string updater_name = 5;
 }
 message ForcedUpdatePasswordResponse {
 }
@@ -184,7 +184,7 @@ message LockAccountRequest {
     int64 account_id = 1;
     int32 locked_type = 2;
     int64 updater_account_id = 3;
-    string updater_username = 4;
+    string updater_name = 4;
 }
 message LockAccountResponse {
 }
@@ -193,7 +193,7 @@ message LockAccountsRequest {
     repeated int64 account_ids = 1;
     repeated int32 locked_types = 2;
     int64 updater_account_id = 3;
-    string updater_username = 4;
+    string updater_name = 4;
 }
 message LockAccountsResponse {
 }
@@ -201,7 +201,7 @@ message LockAccountsResponse {
 message UnlockAccountRequest {
     int64 account_id = 1;
     int64 updater_account_id = 2;
-    string updater_username = 3;
+    string updater_name = 3;
 }
 message UnlockAccountResponse {
 }
@@ -210,7 +210,7 @@ message UnlockAccountResponse {
 message DeleteAccountRequest {
     int64 account_id = 1;
     int64 updater_account_id = 2;
-    string updater_username = 3;
+    string updater_name = 3;
 }
 
 message DeleteAccountResponse {
@@ -298,7 +298,7 @@ message UpdateAccountRoleRequest {
     int64 account_id = 1;
     repeated int64 roles_id = 2;
     int64 updater_account_id = 3;
-    string updater_username = 4;
+    string updater_name = 4;
 }
 message UpdateAccountRoleResponse {
 }

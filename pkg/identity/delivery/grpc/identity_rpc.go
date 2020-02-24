@@ -21,10 +21,6 @@ func (s *IdentityServer) Account(ctx context.Context, _ *identityProto.AccountRe
 	panic("not implemented")
 }
 
-func (s *IdentityServer) AccountByUUID(ctx context.Context, _ *identityProto.AccountByUUIDRequest) (*identityProto.AccountByUUIDResponse, error) {
-	panic("not implemented")
-}
-
 func (s *IdentityServer) Accounts(ctx context.Context, _ *identityProto.AccountsRequest) (*identityProto.AccountsResponse, error) {
 	panic("not implemented")
 }

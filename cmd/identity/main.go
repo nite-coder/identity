@@ -5,7 +5,10 @@ import (
 	"identity/internal/pkg/config"
 	identityProto "identity/pkg/identity/proto"
 	"net"
+	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jasonsoft/log"
@@ -40,11 +43,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("main: bind identity grpc failed: %v", err)
 	}
-	s := grpc.NewServer()
+	grpcServer := grpc.NewServer()
 
-	identityProto.RegisterIdentityServiceServer(s, _identityServer)
+	identityProto.RegisterIdentityServiceServer(grpcServer, _identityServer)
 	log.Info("main: grpc service started")
-	if err = s.Serve(lis); err != nil {
-		log.Fatalf("main: failed to start grpc server: %v", err)
-	}
+
+	go func() {
+		if err = grpcServer.Serve(lis); err != nil {
+			log.Fatalf("main: failed to start grpc server: %v", err)
+		}
+	}()
+
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM)
+	<-stopChan
+	log.Info("main: shutting down server...")
+
+	grpcServer.GracefulStop()
 }
