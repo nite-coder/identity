@@ -30,7 +30,16 @@ func (s *IdentityServer) CountAccounts(ctx context.Context, _ *identityProto.Cou
 }
 
 func (s *IdentityServer) CreateAccount(ctx context.Context, _ *identityProto.CreateAccountRequest) (*identityProto.CreateAccountResponse, error) {
-	panic("not implemented")
+
+	account := identityProto.Account{
+		Id: "123",
+	}
+
+	resp := identityProto.CreateAccountResponse{
+		Account: &account,
+	}
+
+	return &resp, nil
 }
 
 func (s *IdentityServer) UpdateAccount(ctx context.Context, _ *identityProto.UpdateAccountRequest) (*identityProto.UpdateAccountResponse, error) {

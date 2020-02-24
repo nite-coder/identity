@@ -1,8 +1,10 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 	"identity/internal/pkg/config"
+	"net"
 	"os"
 	"testing"
 	"time"
@@ -23,6 +25,7 @@ import (
 
 var (
 	_identityServer *IdentityServer
+	_identityClient identityProto.IdentityServiceClient
 	_lis            *bufconn.Listener
 )
 
@@ -41,8 +44,20 @@ func initialize(cfg config.Configuration) error {
 
 	_identityServer = NewIdentityServer(accountSvc)
 
+	ctx := context.Background()
+	clientConn, err := grpc.DialContext(ctx, "bufnet", grpc.WithDialer(bufDialer), grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to dial bufnet: %v", err)
+	}
+
+	_identityClient = identityProto.NewIdentityServiceClient(clientConn)
+
 	return nil
 
+}
+
+func bufDialer(string, time.Duration) (net.Conn, error) {
+	return _lis.Dial()
 }
 
 func initLogger(appID string, cfg config.Configuration) {
@@ -126,8 +141,9 @@ func TestMain(m *testing.M) {
 		}
 	}()
 
-	code := m.Run()
+	code := m.Run() // run all tests
 	grpcServer.GracefulStop()
+
 	fmt.Println("===end===")
 	os.Exit(code)
 }

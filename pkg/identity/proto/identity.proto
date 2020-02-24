@@ -152,7 +152,7 @@ message CreateAccountRequest {
     Account account = 1;
 }
 message CreateAccountResponse {
-    Account account = 1;
+    string id = 1;
 }
 
 message UpdateAccountRequest {
