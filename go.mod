@@ -1,25 +1,20 @@
 module identity
 
-go 1.12
+go 1.14
 
 require (
-	cloud.google.com/go v0.37.2 // indirect
 	github.com/cenk/backoff v2.2.1+incompatible
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gofrs/uuid v3.2.0+incompatible // indirect
-	github.com/gogo/protobuf v1.2.0
-	github.com/golang/protobuf v1.3.3
 	github.com/jasonsoft/log v1.0.2
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/rotisserie/eris v0.3.0
-	github.com/stretchr/testify v1.3.0
-	golang.org/x/net v0.0.0-20200219183655-46282727080f // indirect
-	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
+	github.com/stretchr/testify v1.7.0
 	golang.org/x/text v0.3.2 // indirect
-	google.golang.org/genproto v0.0.0-20200218151345-dad8c97a84f5 // indirect
-	google.golang.org/grpc v1.27.1
+	google.golang.org/grpc v1.40.0
+	google.golang.org/protobuf v1.27.1
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.8
-	grpc.go4.org v0.0.0-20170609214715-11d0a25b4919
 )

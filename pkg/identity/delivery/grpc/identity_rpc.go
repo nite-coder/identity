@@ -31,12 +31,12 @@ func (s *IdentityServer) CountAccounts(ctx context.Context, _ *identityProto.Cou
 
 func (s *IdentityServer) CreateAccount(ctx context.Context, _ *identityProto.CreateAccountRequest) (*identityProto.CreateAccountResponse, error) {
 
-	account := identityProto.Account{
-		Id: "123",
-	}
+	// account := identityProto.Account{
+	// 	Id: "123",
+	// }
 
 	resp := identityProto.CreateAccountResponse{
-		Account: &account,
+		//		Account: &account,
 	}
 
 	return &resp, nil
