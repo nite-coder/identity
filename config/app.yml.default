@@ -4,10 +4,12 @@ database:
   username:
   password: 
   dbname: identity_db
+
 nats:
   address:
   username:
   password:
+  
 redis:
     address: localhost:6379
     password:

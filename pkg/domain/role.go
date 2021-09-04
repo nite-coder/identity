@@ -1,10 +1,10 @@
-package identity
+package domain
 
 import (
 	"context"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // Role 代表角色資訊

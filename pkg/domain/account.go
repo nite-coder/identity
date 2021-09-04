@@ -1,11 +1,19 @@
-package identity
+package domain
 
 import (
 	"context"
 	"time"
-
-	"github.com/jinzhu/gorm"
 )
+
+const (
+	AccountStatusNone     AccountState = 0
+	AccountStatusNormal   AccountState = 1 //狀態正常
+	AccountStatusDisabled AccountState = 2 //人工鎖定
+	AccountStatusLocked   AccountState = 3 //密碼錯誤次數過多
+	AccountStatusDeleted  AccountState = 4 //帳號廢除
+)
+
+type AccountState int32
 
 // Account represent account information
 type Account struct {
@@ -18,26 +26,34 @@ type Account struct {
 	OTPEnable             bool      `json:"otp_enable" gorm:"column:otp_enable"`
 	OTPSecret             string    `json:"-" gorm:"column:otp_secret"`
 	OTPEffectiveAt        time.Time `json:"otp_effective_time,omitempty" gorm:"column:otp_effective_at"`
+	OTPLastResetAt        time.Time `json:"otp_last_reset_at,omitempty" gorm:"column:otp_last_reset_at"`
 	FirstName             string    `json:"firstName" gorm:"column:first_name"`
 	LastName              string    `json:"lastName" gorm:"column:last_name"`
 	Avatar                string    `json:"avatar,omitempty" gorm:"column:avatar"`
 	Email                 string    `json:"email,omitempty" gorm:"column:email"`
+	MobileCountryCode     string    `json:"mobile_country_code,omitempty" gorm:"column:mobile_country_code"`
 	Mobile                string    `json:"mobile,omitempty" gorm:"column:mobile"`
 	ExternalID            string    `json:"externalID,omitempty" gorm:"column:external_id"`
-	IsLockedOut           int32     `json:"isLockedOut,omitempty" gorm:"column:is_locked_out"`
 	FailedPasswordAttempt int32     `json:"failedPassword_attempt,omitempty" gorm:"column:failed_password_attempt"`
 	ClientIP              string    `json:"clientIP,omitempty" gorm:"column:client_ip"`
 	UserAgent             string    `json:"userAgent,omitempty" gorm:"column:user_agent"`
 	Notes                 string    `json:"notes,omitempty" gorm:"column:notes"`
 	IsAdmin               bool      `json:"isAdmin,omitempty" gorm:"column:is_admin"`
 	LastLoginAt           time.Time `json:"lastLoginTime,omitempty" gorm:"column:last_login_at"`
-	Roles                 []Role    `json:"roles,omitempty"` //bridge
-	CreatorID             int64     `json:"creatorID" gorm:"column:creator_id"`
-	CreatorName           string    `json:"creatorName" gorm:"column:creator_name"`
-	CreatedAt             time.Time `json:"createdAt" gorm:"column:created_at"`
-	UpdaterID             int64     `json:"updaterID" gorm:"column:updater_id"`
-	UpdaterName           string    `json:"updaterName" gorm:"column:updater_name"`
-	UpdatedAt             time.Time `json:"updatedAt" gorm:"column:updated_at"`
+	//Roles                 []Role       `json:"roles,omitempty"` //bridge
+	State       AccountState `json:"state" gorm:"column:state"`
+	Version     uint32       `json:"version" gorm:"column:version"`
+	CreatorID   int64        `json:"creatorID" gorm:"column:creator_id"`
+	CreatorName string       `json:"creatorName" gorm:"column:creator_name"`
+	CreatedAt   time.Time    `json:"createdAt" gorm:"column:created_at"`
+	UpdaterID   int64        `json:"updaterID" gorm:"column:updater_id"`
+	UpdaterName string       `json:"updaterName" gorm:"column:updater_name"`
+	UpdatedAt   time.Time    `json:"updatedAt" gorm:"column:updated_at"`
+}
+
+// TableName 用來取 Account 的資料表名稱
+func (a *Account) TableName() string {
+	return "accounts"
 }
 
 // FindAccountOptions 用來查詢 Account 的選項
@@ -50,10 +66,10 @@ type FindAccountOptions struct {
 	Email            string
 	Mobile           string
 	Role             []string
-	IsLockedOut      int32
+	State            AccountState
 	FirstName        string
-	Offset           int32
-	Limit            int32
+	Offset           int
+	Limit            int
 	SortBy           string
 	Sort             string
 	CreatedTimeStart time.Time
@@ -72,12 +88,12 @@ type LoginInfo struct {
 }
 
 // AccountServicer 用來處理 Account 相關業務操作的 service layer
-type AccountServicer interface {
+type AccountUsecase interface {
 	Account(ctx context.Context, accountID int64) (Account, error)
 	AccountByUUID(ctx context.Context, accountUUID string) (Account, error)
 	Accounts(ctx context.Context, opts FindAccountOptions) ([]Account, error)
-	CountAccounts(ctx context.Context, opts FindAccountOptions) (int32, error)
-	CreateAccount(ctx context.Context, account *Account) error
+	CountAccounts(ctx context.Context, opts FindAccountOptions) (int64, error)
+	CreateAccount(ctx context.Context, account *Account) (*Account, error)
 	UpdateAccount(ctx context.Context, account *Account) error
 	UpdateAccountPassword(ctx context.Context, accountID int64, oldPassword string, newPassword string, updaterAccountID int64, updaterUsername string) error
 	DeleteAccount(ctx context.Context, accountID int64, updaterAccountID int64, updaterUsername string) error
@@ -96,7 +112,6 @@ type AccountServicer interface {
 
 // AccountRepository 用來處理 Account 物件的存儲的行為 repository layer
 type AccountRepository interface {
-	WriteDB() *gorm.DB
 	Account(ctx context.Context, opts FindAccountOptions) (Account, error)
 	AccountByUUID(ctx context.Context, opts FindAccountOptions) (Account, error)
 	Accounts(ctx context.Context, opts FindAccountOptions) ([]Account, error)
@@ -104,17 +119,11 @@ type AccountRepository interface {
 	UpdateAccount(ctx context.Context, account *Account) error
 	UpdateAccountPassword(ctx context.Context, account *Account) error
 	UpdateAccountLockedOut(ctx context.Context, account *Account) error
-	UpdateAccountLockedOutTX(ctx context.Context, DB *gorm.DB, account *Account) error
 	DeleteAccount(ctx context.Context, account *Account) error
 	ClearOTP(ctx context.Context, accountUUID string) error
 	UpdateAccountOTPExpireTime(ctx context.Context, account *Account) error
 	UpdateAccountOTPSecret(ctx context.Context, account *Account) (string, error)
-	CountAccounts(ctx context.Context, options *FindAccountOptions) (int32, error)
+	CountAccounts(ctx context.Context, options FindAccountOptions) (int64, error)
 	//AccountIDsByRoleName(ctx context.Context, roleID int64) ([]int64, error)
 	//UpdateAccountRole(ctx context.Context, accountID int64, roles []int64, updaterAccountID int64, updaterUsername string) error
-}
-
-// TableName 用來取 Account 的資料表名稱
-func (a *Account) TableName() string {
-	return "accounts"
 }

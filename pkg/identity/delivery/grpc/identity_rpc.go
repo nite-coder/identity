@@ -2,17 +2,17 @@ package grpc
 
 import (
 	"context"
-	identity "identity/pkg/identity"
+	"identity/pkg/domain"
 	identityProto "identity/pkg/identity/proto"
 )
 
 // IdentityServer is server
 type IdentityServer struct {
-	accountSvc identity.AccountServicer
+	accountSvc domain.AccountUsecase
 }
 
 // NewIdentityServer generate a new identity server instance
-func NewIdentityServer(accountSvc identity.AccountServicer) *IdentityServer {
+func NewIdentityServer(accountSvc domain.AccountUsecase) *IdentityServer {
 	return &IdentityServer{
 		accountSvc: accountSvc,
 	}
