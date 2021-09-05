@@ -2,10 +2,9 @@ package usecase
 
 import (
 	"context"
-	"testing"
-
 	"identity/pkg/domain"
 	identityMysql "identity/pkg/identity/repository/mysql"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,8 +18,14 @@ func TestCreateAccount(t *testing.T) {
 		//PrepareStmt: true,
 		Logger: logger.Default.LogMode(logger.Silent),
 	}
-	dsn := "root:root@tcp(mysql:3306)/identity_db?charset=utf8&parseTime=true&multiStatements=true&timeout=60s"
+	dsn := "root:root@tcp(mysql:3306)/identity_db?charset=utf8&parseTime=true&timeout=60s"
 	db, err := gorm.Open(gormMySQL.Open(dsn), &gormConfig)
+	require.NoError(t, err)
+
+	err = db.Migrator().DropTable(domain.Account{})
+	require.NoError(t, err)
+
+	err = db.AutoMigrate(domain.Account{})
 	require.NoError(t, err)
 
 	accountRepo := identityMysql.NewAccountRepo(db)
@@ -44,9 +49,11 @@ func TestCreateAccount(t *testing.T) {
 	assert.Equal(t, account.Username, newAccount.Username)
 
 	newAccount1, err := usecase.Account(ctx, newAccount.ID)
+	require.NoError(t, err)
 	assert.Equal(t, newAccount1.UUID, newAccount.UUID)
 
 	newAccount1, err = usecase.AccountByUUID(ctx, newAccount.UUID)
+	require.NoError(t, err)
 	assert.Equal(t, newAccount1.Username, newAccount.Username)
 
 	opts := domain.FindAccountOptions{
@@ -54,5 +61,6 @@ func TestCreateAccount(t *testing.T) {
 	}
 
 	count, err := usecase.CountAccounts(ctx, opts)
-	assert.Equal(t, 1, count)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), count)
 }

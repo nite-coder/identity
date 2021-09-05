@@ -11,7 +11,7 @@
  Target Server Version : 80026
  File Encoding         : 65001
 
- Date: 04/09/2021 18:00:47
+ Date: 05/09/2021 09:00:41
 */
 
 SET NAMES utf8mb4;
@@ -25,20 +25,27 @@ CREATE TABLE `accounts`  (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `uuid` char(36) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `namespace` varchar(256) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `type` int NOT NULL,
   `username` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `password_hash` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `password_encrypt` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `first_name` varchar(24) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `last_name` varchar(24) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `avatar` varchar(24) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `email` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `mobile_country_code` varchar(5) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `mobile` varchar(20) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `external_id` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `is_locked_out` tinyint NOT NULL,
-  `failed_password_attempt_count` int NOT NULL,
+  `failed_password_attempt` int NOT NULL,
+  `otp_enable` tinyint NOT NULL,
+  `otp_secret` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `otp_effective_at` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `otp_last_reset_at` datetime(6) NOT NULL DEFAULT '1970-01-01 00:00:00.000000',
   `client_ip` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `user_agent` varchar(512) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `notes` varchar(512) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `last_login_at` datetime NOT NULL,
+  `is_admin` tinyint NOT NULL,
+  `state` int NOT NULL,
   `version` int NOT NULL,
   `creator_id` int NOT NULL,
   `creator_name` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
@@ -46,7 +53,9 @@ CREATE TABLE `accounts`  (
   `updater_id` int NOT NULL,
   `updater_name` varchar(128) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `updated_at` datetime NOT NULL,
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uniq_uuid`(`uuid`) USING BTREE,
+  UNIQUE INDEX `uniq_username`(`namespace`, `username`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------

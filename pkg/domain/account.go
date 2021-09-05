@@ -17,38 +17,36 @@ type AccountState int32
 
 // Account represent account information
 type Account struct {
-	ID                    int64     `json:"id,omitempty" gorm:"column:id;primary_key"`
-	UUID                  string    `json:"uuid,omitempty" gorm:"column:uuid"`
-	Namespace             string    `json:"namespace,omitempty" gorm:"column:namespace"`
-	Type                  int32     `json:"type,omitempty" gorm:"column:type"`
-	Username              string    `json:"username,omitempty" gorm:"column:username"`
-	PasswordEncrypt       string    `json:"-" gorm:"column:password_encrypt"` //b crytp
-	OTPEnable             bool      `json:"otp_enable" gorm:"column:otp_enable"`
-	OTPSecret             string    `json:"-" gorm:"column:otp_secret"`
-	OTPEffectiveAt        time.Time `json:"otp_effective_time,omitempty" gorm:"column:otp_effective_at"`
-	OTPLastResetAt        time.Time `json:"otp_last_reset_at,omitempty" gorm:"column:otp_last_reset_at"`
-	FirstName             string    `json:"firstName" gorm:"column:first_name"`
-	LastName              string    `json:"lastName" gorm:"column:last_name"`
-	Avatar                string    `json:"avatar,omitempty" gorm:"column:avatar"`
-	Email                 string    `json:"email,omitempty" gorm:"column:email"`
-	MobileCountryCode     string    `json:"mobile_country_code,omitempty" gorm:"column:mobile_country_code"`
-	Mobile                string    `json:"mobile,omitempty" gorm:"column:mobile"`
-	ExternalID            string    `json:"externalID,omitempty" gorm:"column:external_id"`
-	FailedPasswordAttempt int32     `json:"failedPassword_attempt,omitempty" gorm:"column:failed_password_attempt"`
-	ClientIP              string    `json:"clientIP,omitempty" gorm:"column:client_ip"`
-	UserAgent             string    `json:"userAgent,omitempty" gorm:"column:user_agent"`
-	Notes                 string    `json:"notes,omitempty" gorm:"column:notes"`
-	IsAdmin               bool      `json:"isAdmin,omitempty" gorm:"column:is_admin"`
-	LastLoginAt           time.Time `json:"lastLoginTime,omitempty" gorm:"column:last_login_at"`
-	//Roles                 []Role       `json:"roles,omitempty"` //bridge
-	State       AccountState `json:"state" gorm:"column:state"`
-	Version     uint32       `json:"version" gorm:"column:version"`
-	CreatorID   int64        `json:"creatorID" gorm:"column:creator_id"`
-	CreatorName string       `json:"creatorName" gorm:"column:creator_name"`
-	CreatedAt   time.Time    `json:"createdAt" gorm:"column:created_at"`
-	UpdaterID   int64        `json:"updaterID" gorm:"column:updater_id"`
-	UpdaterName string       `json:"updaterName" gorm:"column:updater_name"`
-	UpdatedAt   time.Time    `json:"updatedAt" gorm:"column:updated_at"`
+	ID                    uint64       `gorm:"primaryKey;autoIncrement;"`
+	UUID                  string       `gorm:"column:uuid;type:char(36);size:36;uniqueIndex:uniq_uuid;not null"`
+	Namespace             string       `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_username;not null"`
+	Type                  int32        `gorm:"column:type;type:int;not null"`
+	Username              string       `gorm:"column:username;type:string;size:32;uniqueIndex:uniq_username;not null"`
+	PasswordEncrypt       string       `gorm:"column:password_encrypt;type:string;size:128;not null"`
+	FirstName             string       `gorm:"column:first_name;type:string;size:24;not null"`
+	LastName              string       `gorm:"column:last_name;type:string;size:24;not null"`
+	Avatar                string       `gorm:"column:avatar;type:string;size:24;not null"`
+	Email                 string       `gorm:"column:email;type:string;size:128;not null"`
+	MobileCountryCode     string       `gorm:"column:mobile_country_code;type:string;size:5;not null"`
+	Mobile                string       `gorm:"column:mobile;type:string;size:20;not null"`
+	ExternalID            string       `gorm:"column:external_id;type:string;size:128;not null"`
+	FailedPasswordAttempt int32        `gorm:"column:failed_password_attempt;type:int;not null"`
+	OTPEnable             int32        `gorm:"column:otp_enable;type:tinyint;not null"`
+	OTPSecret             string       `gorm:"column:otp_secret;type:string;size:64;not null"`
+	OTPEffectiveAt        time.Time    `gorm:"column:otp_effective_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	OTPLastResetAt        time.Time    `gorm:"column:otp_last_reset_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	ClientIP              string       `gorm:"column:client_ip;type:string;size:64;not null"`
+	Notes                 string       `gorm:"column:notes;type:string;size:512;not null"`
+	LastLoginAt           time.Time    `gorm:"column:last_login_at;type:datetime;not null"`
+	IsAdmin               int32        `gorm:"column:is_admin;type:tinyint;not null"`
+	State                 AccountState `gorm:"column:state;type:int;not null"`
+	Version               int32        `gorm:"column:version;type:int;not null"`
+	CreatorID             uint64       `gorm:"column:creator_id;type:bigint;not null"`
+	CreatorName           string       `gorm:"column:creator_name;type:string;size:32;not null"`
+	CreatedAt             time.Time    `gorm:"column:created_at;type:datetime;not null"`
+	UpdaterID             uint64       `gorm:"column:updater_id;type:bigint;not null"`
+	UpdaterName           string       `gorm:"column:updater_name;type:string;size:32;not null"`
+	UpdatedAt             time.Time    `gorm:"column:updated_at;type:datetime;default:'1970-01-01 00:00:00';not nullnot null"`
 }
 
 // TableName 用來取 Account 的資料表名稱
@@ -58,7 +56,7 @@ func (a *Account) TableName() string {
 
 // FindAccountOptions 用來查詢 Account 的選項
 type FindAccountOptions struct {
-	ID               int64
+	ID               uint64
 	UUID             string
 	ExternalID       string
 	Namespace        string
@@ -89,25 +87,25 @@ type LoginInfo struct {
 
 // AccountServicer 用來處理 Account 相關業務操作的 service layer
 type AccountUsecase interface {
-	Account(ctx context.Context, accountID int64) (Account, error)
+	Account(ctx context.Context, accountID uint64) (Account, error)
 	AccountByUUID(ctx context.Context, accountUUID string) (Account, error)
 	Accounts(ctx context.Context, opts FindAccountOptions) ([]Account, error)
 	CountAccounts(ctx context.Context, opts FindAccountOptions) (int64, error)
 	CreateAccount(ctx context.Context, account *Account) (*Account, error)
 	UpdateAccount(ctx context.Context, account *Account) error
-	UpdateAccountPassword(ctx context.Context, accountID int64, oldPassword string, newPassword string, updaterAccountID int64, updaterUsername string) error
-	DeleteAccount(ctx context.Context, accountID int64, updaterAccountID int64, updaterUsername string) error
-	ForceUpdateAccountPassword(ctx context.Context, accountID int64, newPassword string, updaterAccountID int64, updaterUsername string) error
-	LockAccount(ctx context.Context, accountID int64, lockedType int32, updaterAccountID int64, updaterUsername string) error
-	LockAccounts(ctx context.Context, accountIDs []int64, lockedTypes []int32, updaterAccountID int64, updaterUsername string) error
-	UnlockAccount(ctx context.Context, accountID int64, updaterAccountID int64, updaterUsername string) error
+	UpdateAccountPassword(ctx context.Context, accountID uint64, oldPassword string, newPassword string, updaterAccountID uint64, updaterUsername string) error
+	DeleteAccount(ctx context.Context, accountID int64, updaterAccountID uint64, updaterUsername string) error
+	ForceUpdateAccountPassword(ctx context.Context, accountID uint64, newPassword string, updaterAccountID uint64, updaterUsername string) error
+	LockAccount(ctx context.Context, accountID uint64, lockedType int32, updaterAccountID uint64, updaterUsername string) error
+	LockAccounts(ctx context.Context, accountIDs []uint64, lockedTypes []int32, updaterAccountID uint64, updaterUsername string) error
+	UnlockAccount(ctx context.Context, accountID uint64, updaterAccountID uint64, updaterUsername string) error
 	Login(ctx context.Context, loginInfo *LoginInfo) (*Account, error)
 	ClearOTP(ctx context.Context, accountUUID string) error
-	GenerateOTPAuth(ctx context.Context, accountID int64) (string, error)
+	GenerateOTPAuth(ctx context.Context, accountID uint64) (string, error)
 	SetOTPExpireTime(ctx context.Context, accountUUID string, duration int64) error
 	VerifyOTP(ctx context.Context, accountUUID string, otpCode string) (*Account, error)
 	//AccountIDsByRoleName(ctx context.Context, namespace, roleName string) ([]int64, error)
-	UpdateAccountRole(ctx context.Context, accountID int64, roles []int64, updaterAccountID int64, updaterUsername string) error
+	UpdateAccountRole(ctx context.Context, accountID uint64, roles []int64, updaterAccountID uint64, updaterUsername string) error
 }
 
 // AccountRepository 用來處理 Account 物件的存儲的行為 repository layer

@@ -19,7 +19,7 @@ func NewAccountUsecase(accountRepo domain.AccountRepository) *AccountUsecase {
 		accountRepo: accountRepo,
 	}
 }
-func (uc *AccountUsecase) Account(ctx context.Context, accountID int64) (domain.Account, error) {
+func (uc *AccountUsecase) Account(ctx context.Context, accountID uint64) (domain.Account, error) {
 	options := domain.FindAccountOptions{
 		ID: accountID,
 	}
@@ -99,7 +99,7 @@ func (uc *AccountUsecase) DeleteAccount(ctx context.Context, accountID int64, up
 	panic("not implemented")
 }
 
-func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, accountID int64, newPassword string, updaterAccountID int64, updaterUsername string) error {
+func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, accountID uint64, newPassword string, updaterAccountID uint64, updaterUsername string) error {
 	//find account
 	account, err := uc.Account(ctx, accountID)
 	if err != nil {

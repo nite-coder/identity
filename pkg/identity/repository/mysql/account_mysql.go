@@ -130,8 +130,6 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 
 	args["client_ip"] = account.ClientIP
 
-	args["user_agent"] = account.UserAgent
-
 	args["last_login_at"] = account.LastLoginAt
 
 	args["updater_id"] = account.UpdaterID
@@ -202,6 +200,8 @@ func (repo *AccountRepo) CountAccounts(ctx context.Context, options domain.FindA
 	db := repo.db.WithContext(ctx)
 
 	var total int64
+
+	db = db.Model(domain.Account{})
 
 	if err := repo.buildWhereClause(db, options).Count(&total).Error; err != nil {
 		logger.Err(err).Interface("opts", options).Error("mysql: count account failed.")
