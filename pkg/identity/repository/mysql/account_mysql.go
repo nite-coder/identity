@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"identity/pkg/domain"
@@ -138,9 +139,20 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 
 	args["updated_at"] = time.Now().UTC()
 
-	if err := db.Model(account).Where("id = ?", account.ID).UpdateColumns(args).Error; err != nil {
+	result := db.Model(account).
+		Where("id = ?", account.ID).
+		Where("version = @version", sql.Named("version", account.Version)).
+		UpdateColumns(args).
+		UpdateColumn("version", gorm.Expr("version + 1"))
+
+	err := result.Error
+	if err != nil {
 		logger.Err(err).Error("mysql: update account failed")
 		return err
+	}
+
+	if result.RowsAffected == 0 {
+		return domain.ErrStale
 	}
 	return nil
 }
@@ -162,20 +174,31 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 	return nil
 }
 
-func (repo *AccountRepo) UpdateAccountLockedOut(ctx context.Context, account *domain.Account) error {
+func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Account) error {
 	logger := log.FromContext(ctx)
 	db := repo.db.WithContext(ctx)
 
 	args := make(map[string]interface{})
 	args["state"] = account.State
+	args["state_changed_at"] = time.Now().UTC()
 	args["updater_id"] = account.UpdaterID
 	args["updater_name"] = account.UpdaterName
-	args["updated_at"] = account.UpdatedAt
+	args["updated_at"] = time.Now().UTC()
 
-	if err := db.Model(account).Where("id = ?", account.ID).UpdateColumns(args).Error; err != nil {
-		logger.Errorf("database: UpdateAccountLockedOut : %#v fail: %v", account, err)
-		return err
+	result := db.Model(account).
+		Where("id = ?", account.ID).
+		UpdateColumns(args).
+		UpdateColumn("version", gorm.Expr("version + 1"))
+
+	err := result.Error
+	if err != nil {
+		logger.Err(err).Interface("param", account).Error("mysql: update state failed")
 	}
+
+	if result.RowsAffected == 0 {
+		return domain.ErrStale
+	}
+
 	return nil
 }
 

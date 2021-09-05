@@ -26,5 +26,5 @@ var (
 	ErrInvalidInput                = &AppError{Code: "INVAID_INPUT", Message: "input is invalid.", Status: codes.InvalidArgument}
 	ErrAlreadyExists               = &AppError{Code: "ALREADY_EXISTS", Message: "resource already exists", Status: codes.AlreadyExists}
 	ErrUsernameOrPasswordIncorrect = &AppError{Code: "USERNAME_OR_PASSWORD_INCORRECT", Message: "username or paassword is incorrect", Status: codes.InvalidArgument}
-	ErrAccountDisable              = &AppError{Code: "ACCOUNT_DISABLE", Message: "the account is disabled", Status: codes.Internal}
+	ErrAccountDisabled             = &AppError{Code: "ACCOUNT_DISABLE", Message: "the account is disabled", Status: codes.Internal}
 )

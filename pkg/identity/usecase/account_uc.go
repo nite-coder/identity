@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"identity/pkg/domain"
 	"time"
@@ -91,11 +92,11 @@ func (uc *AccountUsecase) UpdateAccount(ctx context.Context, account *domain.Acc
 	return uc.accountRepo.UpdateAccount(ctx, account)
 }
 
-func (uc *AccountUsecase) UpdateAccountPassword(ctx context.Context, accountID int64, oldPassword string, newPassword string, updaterAccountID int64, updaterUsername string) error {
+func (uc *AccountUsecase) UpdateAccountPassword(ctx context.Context, accountID uint64, oldPassword string, newPassword string, updaterAccountID uint64, updaterUsername string) error {
 	panic("not implemented")
 }
 
-func (uc *AccountUsecase) DeleteAccount(ctx context.Context, accountID int64, updaterAccountID int64, updaterUsername string) error {
+func (uc *AccountUsecase) DeleteAccount(ctx context.Context, accountID int64, updaterAccountID uint64, updaterUsername string) error {
 	panic("not implemented")
 }
 
@@ -123,25 +124,37 @@ func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, accoun
 	return uc.accountRepo.UpdateAccountPassword(ctx, &updateAccount)
 }
 
-func (uc *AccountUsecase) LockAccount(ctx context.Context, accountID int64, lockedType int32, updaterAccountID int64, updaterUsername string) error {
+func (uc *AccountUsecase) LockAccount(ctx context.Context, accountID uint64) error {
+	account := domain.Account{
+		ID:          accountID,
+		State:       domain.AccountStatusLocked,
+		UpdaterName: domain.SystemName,
+		UpdaterID:   domain.SystemID,
+	}
+
+	err := uc.accountRepo.UpdateState(ctx, &account)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uc *AccountUsecase) DisableAccounts(ctx context.Context, accountIDs []uint64, updaterAccountID uint64, updaterUsername string) error {
 	panic("not implemented")
 }
 
-func (uc *AccountUsecase) LockAccounts(ctx context.Context, accountIDs []int64, lockedTypes []int32, updaterAccountID int64, updaterUsername string) error {
+func (uc *AccountUsecase) UnlockAccount(ctx context.Context, accountID uint64) error {
 	panic("not implemented")
 }
 
-func (uc *AccountUsecase) UnlockAccount(ctx context.Context, accountID int64, updaterAccountID int64, updaterUsername string) error {
-	panic("not implemented")
-}
-
-func (uc *AccountUsecase) Login(ctx context.Context, loginInfo *domain.LoginInfo) (*domain.Account, error) {
+func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo) (*domain.Account, error) {
 	//find account
 	options := domain.FindAccountOptions{
 		Namespace: loginInfo.Namespace,
 		Username:  loginInfo.Username,
 	}
-	accounts, err := uc.Accounts(ctx, options)
+	accounts, err := uc.accountRepo.Accounts(ctx, options)
 
 	if err != nil {
 		return nil, err
@@ -155,26 +168,29 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo *domain.LoginInfo
 
 	//check status
 	if account.State == domain.AccountStatusLocked || account.State == domain.AccountStatusDisabled {
-		return nil, domain.ErrAccountDisable
+		return nil, domain.ErrAccountDisabled
 	}
 
 	//compare password
 	err = isPasswordValid(account.PasswordEncrypt, loginInfo.Password)
 	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			//帳密錯誤更新錯誤次數
 			account.FailedPasswordAttempt = account.FailedPasswordAttempt + 1
 			err := uc.accountRepo.UpdateAccount(ctx, &account)
 			if err != nil {
-				return nil, err
+				return &account, err
 			}
+
+			return &account, domain.ErrUsernameOrPasswordIncorrect
 		}
 
-		return nil, domain.ErrUsernameOrPasswordIncorrect
+		return &account, err
 	}
 
 	//清除登入失敗次數
 	account.FailedPasswordAttempt = 0
+	account.LastLoginAt = time.Now().UTC()
 	err = uc.accountRepo.UpdateAccount(ctx, &account)
 	if err != nil {
 		return nil, err
@@ -187,7 +203,7 @@ func (uc *AccountUsecase) ClearOTP(ctx context.Context, accountUUID string) erro
 	panic("not implemented")
 }
 
-func (uc *AccountUsecase) GenerateOTPAuth(ctx context.Context, accountID int64) (string, error) {
+func (uc *AccountUsecase) GenerateOTPAuth(ctx context.Context, accountID uint64) (string, error) {
 	panic("not implemented")
 }
 
@@ -200,7 +216,7 @@ func (uc *AccountUsecase) VerifyOTP(ctx context.Context, accountUUID string, otp
 }
 
 //AccountIDsByRoleName(ctx context.Context, namespace, roleName string) ([]int64, error)
-func (uc *AccountUsecase) UpdateAccountRole(ctx context.Context, accountID int64, roles []int64, updaterAccountID int64, updaterUsername string) error {
+func (uc *AccountUsecase) UpdateAccountRole(ctx context.Context, accountID uint64, roles []int64, updaterAccountID uint64, updaterUsername string) error {
 	panic("not implemented")
 }
 

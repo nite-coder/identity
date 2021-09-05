@@ -11,6 +11,9 @@ const (
 	AccountStatusDisabled AccountState = 2 //人工鎖定
 	AccountStatusLocked   AccountState = 3 //密碼錯誤次數過多
 	AccountStatusDeleted  AccountState = 4 //帳號廢除
+
+	SystemName = "system"
+	SystemID   = 0
 )
 
 type AccountState int32
@@ -40,13 +43,14 @@ type Account struct {
 	LastLoginAt           time.Time    `gorm:"column:last_login_at;type:datetime;not null"`
 	IsAdmin               int32        `gorm:"column:is_admin;type:tinyint;not null"`
 	State                 AccountState `gorm:"column:state;type:int;not null"`
+	StateChangedAt        time.Time    `gorm:"column:state_changed_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	Version               int32        `gorm:"column:version;type:int;not null"`
 	CreatorID             uint64       `gorm:"column:creator_id;type:bigint;not null"`
 	CreatorName           string       `gorm:"column:creator_name;type:string;size:32;not null"`
-	CreatedAt             time.Time    `gorm:"column:created_at;type:datetime;not null"`
+	CreatedAt             time.Time    `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	UpdaterID             uint64       `gorm:"column:updater_id;type:bigint;not null"`
 	UpdaterName           string       `gorm:"column:updater_name;type:string;size:32;not null"`
-	UpdatedAt             time.Time    `gorm:"column:updated_at;type:datetime;default:'1970-01-01 00:00:00';not nullnot null"`
+	UpdatedAt             time.Time    `gorm:"column:updated_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 }
 
 // TableName 用來取 Account 的資料表名稱
@@ -96,10 +100,10 @@ type AccountUsecase interface {
 	UpdateAccountPassword(ctx context.Context, accountID uint64, oldPassword string, newPassword string, updaterAccountID uint64, updaterUsername string) error
 	DeleteAccount(ctx context.Context, accountID int64, updaterAccountID uint64, updaterUsername string) error
 	ForceUpdateAccountPassword(ctx context.Context, accountID uint64, newPassword string, updaterAccountID uint64, updaterUsername string) error
-	LockAccount(ctx context.Context, accountID uint64, lockedType int32, updaterAccountID uint64, updaterUsername string) error
-	LockAccounts(ctx context.Context, accountIDs []uint64, lockedTypes []int32, updaterAccountID uint64, updaterUsername string) error
-	UnlockAccount(ctx context.Context, accountID uint64, updaterAccountID uint64, updaterUsername string) error
-	Login(ctx context.Context, loginInfo *LoginInfo) (*Account, error)
+	LockAccount(ctx context.Context, accountID uint64) error
+	UnlockAccount(ctx context.Context, accountID uint64) error
+	Login(ctx context.Context, loginInfo LoginInfo) (*Account, error)
+	DisableAccounts(ctx context.Context, accountIDs []uint64, updaterAccountID uint64, updaterUsername string) error
 	ClearOTP(ctx context.Context, accountUUID string) error
 	GenerateOTPAuth(ctx context.Context, accountID uint64) (string, error)
 	SetOTPExpireTime(ctx context.Context, accountUUID string, duration int64) error
@@ -116,7 +120,7 @@ type AccountRepository interface {
 	CreateAccount(ctx context.Context, account *Account) (*Account, error)
 	UpdateAccount(ctx context.Context, account *Account) error
 	UpdateAccountPassword(ctx context.Context, account *Account) error
-	UpdateAccountLockedOut(ctx context.Context, account *Account) error
+	UpdateState(ctx context.Context, account *Account) error
 	DeleteAccount(ctx context.Context, account *Account) error
 	ClearOTP(ctx context.Context, accountUUID string) error
 	UpdateAccountOTPExpireTime(ctx context.Context, account *Account) error
