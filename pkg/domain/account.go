@@ -20,7 +20,7 @@ type AccountState int32
 
 // Account represent account information
 type Account struct {
-	ID                    uint64       `gorm:"primaryKey;autoIncrement;"`
+	ID                    uint64       `gorm:"primaryKey;autoIncrement;not null"`
 	UUID                  string       `gorm:"column:uuid;type:char(36);size:36;uniqueIndex:uniq_uuid;not null"`
 	Namespace             string       `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_username;not null"`
 	Type                  int32        `gorm:"column:type;type:int;not null"`
@@ -44,7 +44,8 @@ type Account struct {
 	IsAdmin               int32        `gorm:"column:is_admin;type:tinyint;not null"`
 	State                 AccountState `gorm:"column:state;type:int;not null"`
 	StateChangedAt        time.Time    `gorm:"column:state_changed_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
-	Version               int32        `gorm:"column:version;type:int;not null"`
+	Roles                 []Role       `gorm:"many2many:account_roles;"`
+	Version               uint32       `gorm:"column:version;type:int;not null"`
 	CreatorID             uint64       `gorm:"column:creator_id;type:bigint;not null"`
 	CreatorName           string       `gorm:"column:creator_name;type:string;size:32;not null"`
 	CreatedAt             time.Time    `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`

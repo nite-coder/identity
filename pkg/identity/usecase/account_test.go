@@ -50,7 +50,7 @@ func TestAccountTestSuite(t *testing.T) {
 }
 
 func (suite *AccountTestSuite) SetupTest() {
-	err := suite.db.Migrator().DropTable(domain.Account{})
+	err := suite.db.Migrator().DropTable(domain.Account{}, domain.Role{}, domain.Permission{})
 	require.NoError(suite.T(), err)
 
 	err = suite.db.AutoMigrate(domain.Account{})

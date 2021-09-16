@@ -8,7 +8,6 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0
-	github.com/jackc/pgx/v4 v4.12.0 // indirect
 	github.com/lib/pq v1.10.3 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/nite-coder/blackbear v0.0.0-20210902022855-9131a3786f25
@@ -16,11 +15,10 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/sys v0.0.0-20210903071746-97244b99971b // indirect
-	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	gorm.io/driver/mysql v1.1.2
-	gorm.io/driver/postgres v1.1.0
-	gorm.io/gorm v1.21.14
+	gorm.io/driver/postgres v1.1.1
+	gorm.io/gorm v1.21.15
 )
