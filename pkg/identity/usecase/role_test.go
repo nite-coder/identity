@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"identity/internal/pkg/global"
 	"identity/pkg/domain"
 	identityMysql "identity/pkg/identity/repository/mysql"
 	"log"
@@ -48,8 +49,10 @@ func TestRoleTestSuite(t *testing.T) {
 		panic(err)
 	}
 
-	roleRepo := identityMysql.NewRoleRepo(db)
-	accountRepo := identityMysql.NewAccountRepo(db)
+	global.DB = db
+
+	roleRepo := identityMysql.NewRoleRepo()
+	accountRepo := identityMysql.NewAccountRepo()
 	usecase := NewRoleUsecase(roleRepo)
 
 	roleTestSuite := RoleTestSuite{
@@ -64,10 +67,10 @@ func TestRoleTestSuite(t *testing.T) {
 }
 
 func (suite *RoleTestSuite) SetupTest() {
-	err := suite.db.Migrator().DropTable(domain.Account{}, domain.Role{}, domain.Permission{})
+	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{})
 	suite.Require().NoError(err)
 
-	err = suite.db.AutoMigrate(domain.Account{}, domain.Role{}, domain.AccountRole{})
+	err = suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.Role{})
 	suite.Require().NoError(err)
 }
 

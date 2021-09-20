@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"identity/internal/pkg/database"
 	"identity/pkg/domain"
 	"time"
 
@@ -10,18 +11,15 @@ import (
 )
 
 type EventLogRepo struct {
-	db *gorm.DB
 }
 
 func NewEventLogRepo(db *gorm.DB) *EventLogRepo {
-	return &EventLogRepo{
-		db: db,
-	}
+	return &EventLogRepo{}
 }
 
 func (repo *EventLogRepo) CreateEventLog(ctx context.Context, eventLog *domain.EventLog) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	eventLog.CreatedAt = time.Now().UTC()
 

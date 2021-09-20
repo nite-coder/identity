@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"identity/internal/pkg/database"
 	"identity/pkg/domain"
 	"time"
 
@@ -14,18 +15,15 @@ import (
 )
 
 type AccountRepo struct {
-	db *gorm.DB
 }
 
-func NewAccountRepo(db *gorm.DB) *AccountRepo {
-	return &AccountRepo{
-		db: db,
-	}
+func NewAccountRepo() *AccountRepo {
+	return &AccountRepo{}
 }
 
 func (repo *AccountRepo) Account(ctx context.Context, opts domain.FindAccountOptions) (*domain.Account, error) {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	var account domain.Account
 
@@ -42,7 +40,7 @@ func (repo *AccountRepo) Account(ctx context.Context, opts domain.FindAccountOpt
 
 func (repo *AccountRepo) AccountByUUID(ctx context.Context, opts domain.FindAccountOptions) (*domain.Account, error) {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	var account domain.Account
 
@@ -59,7 +57,7 @@ func (repo *AccountRepo) AccountByUUID(ctx context.Context, opts domain.FindAcco
 
 func (repo *AccountRepo) Accounts(ctx context.Context, opts domain.FindAccountOptions) ([]domain.Account, error) {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	var accounts []domain.Account
 
@@ -75,7 +73,7 @@ func (repo *AccountRepo) Accounts(ctx context.Context, opts domain.FindAccountOp
 
 func (repo *AccountRepo) CreateAccount(ctx context.Context, account *domain.Account) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	account.CreatedAt = time.Now().UTC()
 	account.LastLoginAt = time.Unix(0, 0)
@@ -96,7 +94,7 @@ func (repo *AccountRepo) CreateAccount(ctx context.Context, account *domain.Acco
 
 func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Account) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	args := make(map[string]interface{})
 	args["id"] = account.ID
@@ -141,7 +139,7 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 
 func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *domain.Account) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	args := make(map[string]interface{})
 	args["password_encrypt"] = account.PasswordEncrypt
@@ -158,7 +156,7 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 
 func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Account) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	args := make(map[string]interface{})
 	args["state"] = account.State
@@ -198,7 +196,7 @@ func (repo *AccountRepo) UpdateAccountOTPSecret(ctx context.Context, account *do
 
 func (repo *AccountRepo) CountAccounts(ctx context.Context, options domain.FindAccountOptions) (int64, error) {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	var total int64
 
@@ -214,7 +212,7 @@ func (repo *AccountRepo) CountAccounts(ctx context.Context, options domain.FindA
 
 func (repo *AccountRepo) AccountsByRoleID(ctx context.Context, namespace string, roleID uint64) ([]domain.Account, error) {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	var accounts []domain.Account
 	err := db.Model(domain.Account{}).

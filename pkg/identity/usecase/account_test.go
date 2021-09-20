@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"identity/internal/pkg/global"
 	"identity/pkg/domain"
 	identityMysql "identity/pkg/identity/repository/mysql"
 	"log"
@@ -47,8 +48,12 @@ func TestAccountTestSuite(t *testing.T) {
 		panic(err)
 	}
 
-	accountRepo := identityMysql.NewAccountRepo(db)
-	usecase := NewAccountUsecase(accountRepo)
+	global.DB = db
+
+	eventLogRepo := identityMysql.NewEventLogRepo(global.DB)
+	accountRepo := identityMysql.NewAccountRepo()
+
+	usecase := NewAccountUsecase(accountRepo, eventLogRepo)
 
 	accountTestSuite := AccountTestSuite{
 		db:          db,
@@ -61,10 +66,10 @@ func TestAccountTestSuite(t *testing.T) {
 }
 
 func (suite *AccountTestSuite) SetupTest() {
-	err := suite.db.Migrator().DropTable(domain.Account{}, domain.Role{}, domain.Permission{})
+	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{})
 	suite.Require().NoError(err)
 
-	err = suite.db.AutoMigrate(domain.Account{})
+	err = suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.Role{})
 	suite.Require().NoError(err)
 }
 

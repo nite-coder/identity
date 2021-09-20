@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"identity/internal/pkg/database"
 	"identity/pkg/domain"
 	"time"
 
@@ -14,18 +15,15 @@ import (
 )
 
 type RoleRepo struct {
-	db *gorm.DB
 }
 
-func NewRoleRepo(db *gorm.DB) *RoleRepo {
-	return &RoleRepo{
-		db: db,
-	}
+func NewRoleRepo() *RoleRepo {
+	return &RoleRepo{}
 }
 
 func (repo *RoleRepo) CreateRole(ctx context.Context, role *domain.Role) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	role.CreatedAt = time.Now().UTC()
 
@@ -45,7 +43,7 @@ func (repo *RoleRepo) CreateRole(ctx context.Context, role *domain.Role) error {
 
 func (repo *RoleRepo) UpdateRole(ctx context.Context, role *domain.Role) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	args := make(map[string]interface{})
 	args["name"] = role.Name
@@ -76,7 +74,7 @@ func (repo *RoleRepo) UpdateRole(ctx context.Context, role *domain.Role) error {
 
 func (repo *RoleRepo) Role(ctx context.Context, namespace string, id uint64) (*domain.Role, error) {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	role := domain.Role{}
 	err := db.Model(domain.Role{}).Where("id = ?", id).Where("namespace = ?", namespace).Find(&role).Error
@@ -93,7 +91,7 @@ func (repo *RoleRepo) Role(ctx context.Context, namespace string, id uint64) (*d
 
 func (repo *RoleRepo) RolesByAccountID(ctx context.Context, namespace string, accountID uint64) ([]domain.Role, error) {
 	//logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	roles := []domain.Role{}
 	err := db.Model(domain.Role{}).
@@ -111,7 +109,7 @@ func (repo *RoleRepo) RolesByAccountID(ctx context.Context, namespace string, ac
 
 func (repo *RoleRepo) Roles(ctx context.Context, opts domain.FindRoleOptions) ([]domain.Role, error) {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	var roles []domain.Role
 
@@ -127,7 +125,7 @@ func (repo *RoleRepo) Roles(ctx context.Context, opts domain.FindRoleOptions) ([
 
 func (repo *RoleRepo) AddAccountsToRole(ctx context.Context, accountIDs []uint64, roleID uint64) error {
 	logger := log.FromContext(ctx)
-	db := repo.db.WithContext(ctx)
+	db := database.FromContext(ctx)
 
 	err := db.Where("role_id = ?", roleID).Delete(&domain.AccountRole{}).Error
 	if err != nil {

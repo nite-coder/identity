@@ -4,20 +4,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"identity/internal/pkg/database"
 	"identity/pkg/domain"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type AccountUsecase struct {
-	accountRepo domain.AccountRepository
+	accountRepo  domain.AccountRepository
+	eventLogRepo domain.EventLogRepository
 }
 
-func NewAccountUsecase(accountRepo domain.AccountRepository) *AccountUsecase {
+func NewAccountUsecase(accountRepo domain.AccountRepository, eventLogRepo domain.EventLogRepository) *AccountUsecase {
 	return &AccountUsecase{
-		accountRepo: accountRepo,
+		accountRepo:  accountRepo,
+		eventLogRepo: eventLogRepo,
 	}
 }
 func (uc *AccountUsecase) Account(ctx context.Context, accountID uint64) (*domain.Account, error) {
@@ -80,7 +85,25 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 		return nil, err
 	}
 
-	err = uc.accountRepo.CreateAccount(ctx, account)
+	db := database.FromContext(ctx)
+	err = db.Transaction(func(tx *gorm.DB) error {
+		ctx = database.ToContext(ctx, tx)
+
+		err = uc.accountRepo.CreateAccount(ctx, account)
+		if err != nil {
+			return err
+		}
+
+		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
+			Namespace: "identity.account",
+			Action:    "create",
+			TargetID:  strconv.FormatUint(account.ID, 10),
+			Actor:     account.CreatorName,
+			Message:   "account is created",
+			State:     domain.EventLogSuccess,
+		})
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +168,6 @@ func (uc *AccountUsecase) UnlockAccount(ctx context.Context, accountID uint64) e
 }
 
 func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo) (*domain.Account, error) {
-	//find account
 	options := domain.FindAccountOptions{
 		Namespace: loginInfo.Namespace,
 		Username:  loginInfo.Username,
@@ -167,15 +189,32 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo)
 		return nil, domain.ErrAccountDisabled
 	}
 
+	db := database.FromContext(ctx)
 	//compare password
 	err = isPasswordValid(account.PasswordEncrypt, loginInfo.Password)
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+
 			//帳密錯誤更新錯誤次數
-			account.FailedPasswordAttempt = account.FailedPasswordAttempt + 1
-			err := uc.accountRepo.UpdateAccount(ctx, &account)
+			err = db.Transaction(func(tx *gorm.DB) error {
+				account.FailedPasswordAttempt = account.FailedPasswordAttempt + 1
+				err := uc.accountRepo.UpdateAccount(ctx, &account)
+				if err != nil {
+					return err
+				}
+
+				return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
+					Namespace: "identity.account",
+					Action:    "login",
+					TargetID:  strconv.FormatUint(account.ID, 10),
+					Actor:     account.UpdaterName,
+					Message:   "login failed",
+					State:     domain.EventLogFail,
+				})
+			})
+
 			if err != nil {
-				return &account, err
+				return nil, err
 			}
 
 			return &account, domain.ErrUsernameOrPasswordIncorrect
@@ -185,9 +224,24 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo)
 	}
 
 	//清除登入失敗次數
-	account.FailedPasswordAttempt = 0
-	account.LastLoginAt = time.Now().UTC()
-	err = uc.accountRepo.UpdateAccount(ctx, &account)
+	err = db.Transaction(func(tx *gorm.DB) error {
+		account.FailedPasswordAttempt = 0
+		account.LastLoginAt = time.Now().UTC()
+		err = uc.accountRepo.UpdateAccount(ctx, &account)
+		if err != nil {
+			return err
+		}
+
+		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
+			Namespace: "identity.account",
+			Action:    "login",
+			TargetID:  strconv.FormatUint(account.ID, 10),
+			Actor:     account.UpdaterName,
+			Message:   "login success",
+			State:     domain.EventLogSuccess,
+		})
+	})
+
 	if err != nil {
 		return nil, err
 	}
