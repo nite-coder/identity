@@ -16,10 +16,16 @@ const (
 	SystemID   = 0
 )
 
+var (
+	TableNameAccount     = "accounts"
+	TableNameAccountRole = "accounts_roles"
+)
+
 type AccountState int32
 
 // Account represent account information
 type Account struct {
+	tableName             string       `gorm:"column:-"`
 	ID                    uint64       `gorm:"primaryKey;autoIncrement;not null"`
 	UUID                  string       `gorm:"column:uuid;type:char(36);size:36;uniqueIndex:uniq_uuid;not null"`
 	Namespace             string       `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_username;not null"`
@@ -55,7 +61,7 @@ type Account struct {
 
 // TableName 用來取 Account 的資料表名稱
 func (a *Account) TableName() string {
-	return "accounts"
+	return TableNameAccount
 }
 
 type AccountRole struct {
@@ -64,7 +70,7 @@ type AccountRole struct {
 }
 
 func (a *AccountRole) TableName() string {
-	return "accounts_roles"
+	return TableNameAccountRole
 }
 
 // FindAccountOptions 用來查詢 Account 的選項

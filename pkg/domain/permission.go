@@ -2,6 +2,11 @@ package domain
 
 import "time"
 
+var (
+	TableNamePermissionGroup = "permission_groups"
+	TableNamePermission      = "permissions"
+)
+
 type PermissionGroup struct {
 	ID          uint64    `gorm:"column:id;primaryKey;not null"`
 	Namespace   string    `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_name;not null"`
@@ -16,7 +21,7 @@ type PermissionGroup struct {
 }
 
 func (g *PermissionGroup) TableName() string {
-	return "permission_groups"
+	return TableNamePermissionGroup
 }
 
 type Permission struct {
@@ -34,5 +39,5 @@ type Permission struct {
 }
 
 func (p *Permission) TableName() string {
-	return "permissions"
+	return TableNamePermission
 }

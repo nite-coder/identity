@@ -13,6 +13,10 @@ const (
 	RoleStatusDisabled RoleState = 2
 )
 
+var (
+	TableNameRoles = "roles"
+)
+
 // Role 代表角色資訊
 type Role struct {
 	ID          uint64    `gorm:"column:id;primaryKey;not null"`
@@ -31,7 +35,7 @@ type Role struct {
 
 // TableName gorm callback function, get table name
 func (r *Role) TableName() string {
-	return "roles"
+	return TableNameRoles
 }
 
 // FindRolesOptions 用來當查詢 Roles 的條件

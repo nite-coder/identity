@@ -93,9 +93,11 @@ func (repo *RoleRepo) RolesByAccountID(ctx context.Context, namespace string, ac
 	//logger := log.FromContext(ctx)
 	db := database.FromContext(ctx)
 
+	joinStr := fmt.Sprintf("left join `%s` on `%s`.role_id = `%s`.id", domain.TableNameAccountRole, domain.TableNameAccountRole, domain.TableNameRoles)
+
 	roles := []domain.Role{}
 	err := db.Model(domain.Role{}).
-		Joins("left join accounts_roles on accounts_roles.role_id = roles.id").
+		Joins(joinStr).
 		Where("account_id = ?", accountID).
 		Where("namespace = ?", namespace).
 		Find(&roles).Error

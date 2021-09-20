@@ -10,4 +10,5 @@ infra:
 infra-down:
 	- docker-compose -f docker-compose-infra.yml down
 
-go-run:
+test:
+	go test -race -coverprofile=cover.out -covermode=atomic ./...

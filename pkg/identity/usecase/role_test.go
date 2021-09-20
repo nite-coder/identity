@@ -43,7 +43,7 @@ func TestRoleTestSuite(t *testing.T) {
 		Logger: dbLogger,
 	}
 
-	dsn := "root:root@tcp(mysql:3306)/identity_db?charset=utf8&parseTime=true&timeout=60s"
+	dsn := "root:root@tcp(mysql:3306)/identity_db?charset=utf8mb4&parseTime=true&timeout=60s"
 	db, err := gorm.Open(mysql.Open(dsn), &gormConfig)
 	if err != nil {
 		panic(err)
@@ -67,10 +67,27 @@ func TestRoleTestSuite(t *testing.T) {
 }
 
 func (suite *RoleTestSuite) SetupTest() {
-	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{})
+	domain.TableNameEventLog = "event_logs" + "_" + uuid.NewString()
+	domain.TableNameAccount = "accounts" + "_" + uuid.NewString()
+	domain.TableNameAccountRole = "accounts_roles" + "_" + uuid.NewString()
+	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
+	domain.TableNamePermissionGroup = "permission_groups" + "_" + uuid.NewString()
+	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
+
+	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{})
 	suite.Require().NoError(err)
 
-	err = suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.Role{})
+}
+
+func (suite *RoleTestSuite) TearDownTest() {
+	domain.TableNameEventLog = "event_logs" + "_" + uuid.NewString()
+	domain.TableNameAccount = "accounts" + "_" + uuid.NewString()
+	domain.TableNameAccountRole = "accounts_roles" + "_" + uuid.NewString()
+	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
+	domain.TableNamePermissionGroup = "permission_groups" + "_" + uuid.NewString()
+	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
+
+	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{})
 	suite.Require().NoError(err)
 }
 

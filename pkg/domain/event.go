@@ -13,6 +13,10 @@ const (
 	EventLogFail    EventLogState = 2
 )
 
+var (
+	TableNameEventLog = "event_logs"
+)
+
 type EventLog struct {
 	ID        uint64        `gorm:"primaryKey;autoIncrement;not null"`
 	Namespace string        `gorm:"column:namespace;type:string;size:256;not null"`
@@ -26,7 +30,7 @@ type EventLog struct {
 }
 
 func (e *EventLog) TableName() string {
-	return "event_logs"
+	return TableNameEventLog
 }
 
 type EventLogRepository interface {
