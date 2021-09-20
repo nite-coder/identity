@@ -1,4 +1,4 @@
-package database
+package mysql
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func NewAccountRepo(db *gorm.DB) *AccountRepo {
 	}
 }
 
-func (repo *AccountRepo) Account(ctx context.Context, opts domain.FindAccountOptions) (domain.Account, error) {
+func (repo *AccountRepo) Account(ctx context.Context, opts domain.FindAccountOptions) (*domain.Account, error) {
 	logger := log.FromContext(ctx)
 	db := repo.db.WithContext(ctx)
 
@@ -31,16 +31,16 @@ func (repo *AccountRepo) Account(ctx context.Context, opts domain.FindAccountOpt
 
 	if err := db.Where("id = ?", opts.ID).Find(&account).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
+			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
-		logger.Err(err).Interface("opts", opts).Error("mysql: get account failed.")
-		return account, err
+		logger.Err(err).Interface("params", opts).Error("mysql: get account failed.")
+		return &account, err
 	}
 
-	return account, nil
+	return &account, nil
 }
 
-func (repo *AccountRepo) AccountByUUID(ctx context.Context, opts domain.FindAccountOptions) (domain.Account, error) {
+func (repo *AccountRepo) AccountByUUID(ctx context.Context, opts domain.FindAccountOptions) (*domain.Account, error) {
 	logger := log.FromContext(ctx)
 	db := repo.db.WithContext(ctx)
 
@@ -48,13 +48,13 @@ func (repo *AccountRepo) AccountByUUID(ctx context.Context, opts domain.FindAcco
 
 	if err := db.Where("uuid = ?", opts.UUID).Find(&account).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
+			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
-		logger.Err(err).Interface("opts", opts).Error("mysql: get account by uuid failed.")
-		return account, err
+		logger.Err(err).Interface("params", opts).Error("mysql: get account by uuid failed.")
+		return &account, err
 	}
 
-	return account, nil
+	return &account, nil
 }
 
 func (repo *AccountRepo) Accounts(ctx context.Context, opts domain.FindAccountOptions) ([]domain.Account, error) {
@@ -66,29 +66,32 @@ func (repo *AccountRepo) Accounts(ctx context.Context, opts domain.FindAccountOp
 	db = repo.buildWhereClause(db, opts)
 
 	if err := db.Find(&accounts).Error; err != nil {
-		logger.Err(err).Interface("opts", opts).Error("mysql: get accounts failed")
+		logger.Err(err).Interface("params", opts).Error("mysql: get accounts failed")
 		return nil, err
 	}
 
 	return accounts, nil
 }
 
-func (repo *AccountRepo) CreateAccount(ctx context.Context, account *domain.Account) (*domain.Account, error) {
+func (repo *AccountRepo) CreateAccount(ctx context.Context, account *domain.Account) error {
 	logger := log.FromContext(ctx)
 	db := repo.db.WithContext(ctx)
+
+	account.CreatedAt = time.Now().UTC()
+	account.LastLoginAt = time.Unix(0, 0)
 
 	if err := db.Create(account).Error; err != nil {
 		mysqlErr, ok := err.(*mysql.MySQLError)
 		if ok {
 			if mysqlErr.Number == 1062 {
-				return nil, fmt.Errorf("mysql: the account has already exists.  %w", domain.ErrAlreadyExists)
+				return fmt.Errorf("mysql: the account has already exists.  %w", domain.ErrAlreadyExists)
 			}
 		}
-		logger.Err(err).Interface("account", account).Error("mysql: create account fail")
-		return nil, err
+		logger.Err(err).Interface("params", account).Error("mysql: create account fail")
+		return err
 	}
 
-	return account, nil
+	return nil
 }
 
 func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Account) error {
@@ -96,47 +99,26 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 	db := repo.db.WithContext(ctx)
 
 	args := make(map[string]interface{})
-	//use map to implement update
 	args["id"] = account.ID
-
 	args["uuid"] = account.UUID
-
 	args["namespace"] = account.Namespace
-
 	args["type"] = account.Type
-
 	args["username"] = account.Username
-
 	args["otp_enable"] = account.OTPEnable
-
 	args["otp_secret"] = account.OTPSecret
-
 	args["otp_effective_at"] = account.OTPEffectiveAt
-
 	args["first_name"] = account.FirstName
-
 	args["last_name"] = account.LastName
-
 	args["avatar"] = account.Avatar
-
 	args["email"] = account.Email
-
 	args["mobile"] = account.Mobile
-
 	args["external_id"] = account.ExternalID
-
 	args["state"] = account.State
-
 	args["failed_password_attempt"] = account.FailedPasswordAttempt
-
 	args["client_ip"] = account.ClientIP
-
 	args["last_login_at"] = account.LastLoginAt
-
 	args["updater_id"] = account.UpdaterID
-
 	args["updater_name"] = account.UpdaterName
-
 	args["updated_at"] = time.Now().UTC()
 
 	result := db.Model(account).
@@ -168,7 +150,7 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 	args["updated_at"] = time.Now().UTC()
 
 	if err := db.Model(account).Where("id = ?", account.ID).UpdateColumns(args).Error; err != nil {
-		logger.Err(err).Interface("account", account).Error("mysql:uUpdate account password failed")
+		logger.Err(err).Interface("params", account).Error("mysql:uUpdate account password failed")
 		return err
 	}
 	return nil
@@ -202,10 +184,6 @@ func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Accoun
 	return nil
 }
 
-func (repo *AccountRepo) DeleteAccount(ctx context.Context, account *domain.Account) error {
-	panic("not implemented")
-}
-
 func (repo *AccountRepo) ClearOTP(ctx context.Context, accountUUID string) error {
 	panic("not implemented")
 }
@@ -227,11 +205,30 @@ func (repo *AccountRepo) CountAccounts(ctx context.Context, options domain.FindA
 	db = db.Model(domain.Account{})
 
 	if err := repo.buildWhereClause(db, options).Count(&total).Error; err != nil {
-		logger.Err(err).Interface("opts", options).Error("mysql: count account failed.")
+		logger.Err(err).Interface("params", options).Error("mysql: count account failed.")
 		return 0, err
 	}
 
 	return total, nil
+}
+
+func (repo *AccountRepo) AccountsByRoleID(ctx context.Context, namespace string, roleID uint64) ([]domain.Account, error) {
+	logger := log.FromContext(ctx)
+	db := repo.db.WithContext(ctx)
+
+	var accounts []domain.Account
+	err := db.Model(domain.Account{}).
+		Joins("left join accounts_roles on accounts_roles.account_id = accounts.id").
+		Where("role_id = ?", roleID).
+		Where("namespace = ?", namespace).
+		Find(&accounts).Error
+
+	if err != nil {
+		logger.Err(err).Error("mysql: get accounts by role id failed.")
+		return accounts, err
+	}
+
+	return accounts, nil
 }
 
 func (repo *AccountRepo) buildWhereClause(db *gorm.DB, options domain.FindAccountOptions) *gorm.DB {

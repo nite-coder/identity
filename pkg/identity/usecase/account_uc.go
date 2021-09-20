@@ -20,7 +20,7 @@ func NewAccountUsecase(accountRepo domain.AccountRepository) *AccountUsecase {
 		accountRepo: accountRepo,
 	}
 }
-func (uc *AccountUsecase) Account(ctx context.Context, accountID uint64) (domain.Account, error) {
+func (uc *AccountUsecase) Account(ctx context.Context, accountID uint64) (*domain.Account, error) {
 	options := domain.FindAccountOptions{
 		ID: accountID,
 	}
@@ -28,7 +28,7 @@ func (uc *AccountUsecase) Account(ctx context.Context, accountID uint64) (domain
 	return uc.accountRepo.Account(ctx, options)
 }
 
-func (uc *AccountUsecase) AccountByUUID(ctx context.Context, accountUUID string) (domain.Account, error) {
+func (uc *AccountUsecase) AccountByUUID(ctx context.Context, accountUUID string) (*domain.Account, error) {
 	options := domain.FindAccountOptions{
 		UUID: accountUUID,
 	}
@@ -80,12 +80,12 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 		return nil, err
 	}
 
-	newAccount, err := uc.accountRepo.CreateAccount(ctx, account)
+	err = uc.accountRepo.CreateAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
 
-	return newAccount, nil
+	return account, nil
 }
 
 func (uc *AccountUsecase) UpdateAccount(ctx context.Context, account *domain.Account) error {
@@ -93,10 +93,6 @@ func (uc *AccountUsecase) UpdateAccount(ctx context.Context, account *domain.Acc
 }
 
 func (uc *AccountUsecase) UpdateAccountPassword(ctx context.Context, accountID uint64, oldPassword string, newPassword string, updaterAccountID uint64, updaterUsername string) error {
-	panic("not implemented")
-}
-
-func (uc *AccountUsecase) DeleteAccount(ctx context.Context, accountID int64, updaterAccountID uint64, updaterUsername string) error {
 	panic("not implemented")
 }
 

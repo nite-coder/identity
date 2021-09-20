@@ -39,12 +39,11 @@ type Account struct {
 	OTPEffectiveAt        time.Time    `gorm:"column:otp_effective_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	OTPLastResetAt        time.Time    `gorm:"column:otp_last_reset_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	ClientIP              string       `gorm:"column:client_ip;type:string;size:64;not null"`
-	Notes                 string       `gorm:"column:notes;type:string;size:512;not null"`
+	Note                  string       `gorm:"column:notes;type:string;size:512;not null"`
 	LastLoginAt           time.Time    `gorm:"column:last_login_at;type:datetime;not null"`
 	IsAdmin               int32        `gorm:"column:is_admin;type:tinyint;not null"`
 	State                 AccountState `gorm:"column:state;type:int;not null"`
 	StateChangedAt        time.Time    `gorm:"column:state_changed_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
-	Roles                 []Role       `gorm:"many2many:account_roles;"`
 	Version               uint32       `gorm:"column:version;type:int;not null"`
 	CreatorID             uint64       `gorm:"column:creator_id;type:bigint;not null"`
 	CreatorName           string       `gorm:"column:creator_name;type:string;size:32;not null"`
@@ -57,6 +56,15 @@ type Account struct {
 // TableName 用來取 Account 的資料表名稱
 func (a *Account) TableName() string {
 	return "accounts"
+}
+
+type AccountRole struct {
+	AccountID uint64 `gorm:"primaryKey;not null"`
+	RoleID    uint64 `gorm:"primaryKey;not null"`
+}
+
+func (a *AccountRole) TableName() string {
+	return "accounts_roles"
 }
 
 // FindAccountOptions 用來查詢 Account 的選項
@@ -90,16 +98,15 @@ type LoginInfo struct {
 	Password  string `json:"password"`
 }
 
-// AccountServicer 用來處理 Account 相關業務操作的 service layer
+// AccountUsecase 用來處理 Account 相關業務操作的 service layer
 type AccountUsecase interface {
-	Account(ctx context.Context, accountID uint64) (Account, error)
-	AccountByUUID(ctx context.Context, accountUUID string) (Account, error)
+	Account(ctx context.Context, accountID uint64) (*Account, error)
+	AccountByUUID(ctx context.Context, accountUUID string) (*Account, error)
 	Accounts(ctx context.Context, opts FindAccountOptions) ([]Account, error)
 	CountAccounts(ctx context.Context, opts FindAccountOptions) (int64, error)
 	CreateAccount(ctx context.Context, account *Account) (*Account, error)
 	UpdateAccount(ctx context.Context, account *Account) error
 	UpdateAccountPassword(ctx context.Context, accountID uint64, oldPassword string, newPassword string, updaterAccountID uint64, updaterUsername string) error
-	DeleteAccount(ctx context.Context, accountID int64, updaterAccountID uint64, updaterUsername string) error
 	ForceUpdateAccountPassword(ctx context.Context, accountID uint64, newPassword string, updaterAccountID uint64, updaterUsername string) error
 	LockAccount(ctx context.Context, accountID uint64) error
 	UnlockAccount(ctx context.Context, accountID uint64) error
@@ -115,14 +122,14 @@ type AccountUsecase interface {
 
 // AccountRepository 用來處理 Account 物件的存儲的行為 repository layer
 type AccountRepository interface {
-	Account(ctx context.Context, opts FindAccountOptions) (Account, error)
-	AccountByUUID(ctx context.Context, opts FindAccountOptions) (Account, error)
+	Account(ctx context.Context, opts FindAccountOptions) (*Account, error)
+	AccountByUUID(ctx context.Context, opts FindAccountOptions) (*Account, error)
 	Accounts(ctx context.Context, opts FindAccountOptions) ([]Account, error)
-	CreateAccount(ctx context.Context, account *Account) (*Account, error)
+	AccountsByRoleID(ctx context.Context, namespace string, roleID uint64) ([]Account, error)
+	CreateAccount(ctx context.Context, account *Account) error
 	UpdateAccount(ctx context.Context, account *Account) error
 	UpdateAccountPassword(ctx context.Context, account *Account) error
 	UpdateState(ctx context.Context, account *Account) error
-	DeleteAccount(ctx context.Context, account *Account) error
 	ClearOTP(ctx context.Context, accountUUID string) error
 	UpdateAccountOTPExpireTime(ctx context.Context, account *Account) error
 	UpdateAccountOTPSecret(ctx context.Context, account *Account) (string, error)

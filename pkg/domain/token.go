@@ -62,14 +62,13 @@ func FromContext(ctx context.Context) (Claims, bool) {
 	return val, true
 }
 
-// TokenServicer 用來處理 Token 相關業務操作的 service layer
-type TokenServicer interface {
+// TokenUsecase 用來處理 Token 相關業務操作的場景
+type TokenUsecase interface {
 	CreateToken(ctx context.Context, accessToken Token, prefixTokens ...string) (string, string, error)
 	Token(ctx context.Context, tokenKey string) (*Token, error)
 	RefreshToken(ctx context.Context, tokenKey string) (string, string, error)
 	BindHashToken(ctx context.Context, hashKey, accessTokenKey string) error
 	DeleteHash(ctx context.Context, hashKey string) error
-
 	DeleteTokenByAccountID(ctx context.Context, accountID int64, prefixTokens ...string) error
 	RenewToken(ctx context.Context, tokenKey string, duration int64) error
 	CreateRefreshToken(ctx context.Context, token *Token) (string, error)

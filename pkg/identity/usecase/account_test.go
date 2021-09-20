@@ -4,11 +4,12 @@ import (
 	"context"
 	"identity/pkg/domain"
 	identityMysql "identity/pkg/identity/repository/mysql"
+	"log"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,9 +26,19 @@ type AccountTestSuite struct {
 
 func TestAccountTestSuite(t *testing.T) {
 	var err error
+
+	dbLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  logger.Silent, // Log level
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,         // Disable color
+		},
+	)
+
 	gormConfig := gorm.Config{
-		//PrepareStmt: true,
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: dbLogger,
 	}
 
 	dsn := "root:root@tcp(mysql:3306)/identity_db?charset=utf8&parseTime=true&timeout=60s"
@@ -51,10 +62,10 @@ func TestAccountTestSuite(t *testing.T) {
 
 func (suite *AccountTestSuite) SetupTest() {
 	err := suite.db.Migrator().DropTable(domain.Account{}, domain.Role{}, domain.Permission{})
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 
 	err = suite.db.AutoMigrate(domain.Account{})
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *AccountTestSuite) TestCreateAccount() {
@@ -70,17 +81,17 @@ func (suite *AccountTestSuite) TestCreateAccount() {
 	}
 
 	newAccount, err := suite.usecase.CreateAccount(ctx, &account)
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 
 	//assert.Equal(t, 1, newAccount)
 	assert.Equal(suite.T(), account.Username, newAccount.Username)
 
 	newAccount1, err := suite.usecase.Account(ctx, newAccount.ID)
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	assert.Equal(suite.T(), newAccount1.UUID, newAccount.UUID)
 
 	newAccount1, err = suite.usecase.AccountByUUID(ctx, newAccount.UUID)
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	assert.Equal(suite.T(), newAccount1.Username, newAccount.Username)
 
 	opts := domain.FindAccountOptions{
@@ -88,8 +99,8 @@ func (suite *AccountTestSuite) TestCreateAccount() {
 	}
 
 	count, err := suite.usecase.CountAccounts(ctx, opts)
-	require.NoError(suite.T(), err)
-	assert.Equal(suite.T(), int64(1), count)
+	suite.Require().NoError(err)
+	suite.Assert().Equal(int64(1), count)
 }
 
 func (suite *AccountTestSuite) TestLogin() {
@@ -105,7 +116,7 @@ func (suite *AccountTestSuite) TestLogin() {
 	}
 
 	_, err := suite.usecase.CreateAccount(ctx, &account)
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 
 	suite.Run("username was not found", func() {
 		login := domain.LoginInfo{
@@ -114,8 +125,8 @@ func (suite *AccountTestSuite) TestLogin() {
 			Password:  "123456",
 		}
 		account, err := suite.usecase.Login(ctx, login)
-		assert.ErrorIs(suite.T(), err, domain.ErrUsernameOrPasswordIncorrect)
-		assert.Nil(suite.T(), account)
+		suite.Assert().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
+		suite.Assert().Nil(account)
 	})
 
 	suite.Run("login successfully", func() {
@@ -126,14 +137,14 @@ func (suite *AccountTestSuite) TestLogin() {
 			Password:  "1111",
 		}
 		newAccount, err := suite.usecase.Login(ctx, login)
-		assert.ErrorIs(suite.T(), err, domain.ErrUsernameOrPasswordIncorrect)
+		suite.Assert().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
 
 		login.Password = "123456"
 		newAccount, err = suite.usecase.Login(ctx, login)
-		require.NoError(suite.T(), err)
-		assert.Equal(suite.T(), account.Username, newAccount.Username)
-		assert.True(suite.T(), now.Before(newAccount.LastLoginAt))
-		assert.Equal(suite.T(), int32(0), newAccount.FailedPasswordAttempt)
+		suite.Require().NoError(err)
+		suite.Assert().Equal(account.Username, newAccount.Username)
+		suite.Assert().True(now.Before(newAccount.LastLoginAt))
+		suite.Assert().Equal(int32(0), newAccount.FailedPasswordAttempt)
 	})
 
 	suite.Run("login failed and account is locked", func() {
@@ -152,6 +163,6 @@ func (suite *AccountTestSuite) TestLogin() {
 
 		assert.Equal(suite.T(), int32(5), account.FailedPasswordAttempt)
 		err = suite.usecase.LockAccount(ctx, account.ID)
-		require.NoError(suite.T(), err)
+		suite.Require().NoError(err)
 	})
 }

@@ -5,11 +5,21 @@ import (
 	"time"
 )
 
+type RoleState uint32
+
+const (
+	RoleStatusNone     RoleState = 0
+	RoleStatusNormal   RoleState = 1
+	RoleStatusDisabled RoleState = 2
+)
+
 // Role 代表角色資訊
 type Role struct {
-	ID          int64     `gorm:"column:id;primaryKey;not null"`
+	ID          uint64    `gorm:"column:id;primaryKey;not null"`
 	Namespace   string    `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_name;not null"`
 	Name        string    `gorm:"column:name;type:string;size:32;uniqueIndex:uniq_name;not null"`
+	Desc        string    `gorm:"column:desc;type:string;size:512;not null"`
+	State       RoleState `gorm:"column:state;type:int;not null"`
 	Version     uint32    `gorm:"column:version;type:int;not null"`
 	CreatorID   uint64    `gorm:"column:creator_id;type:bigint;not null"`
 	CreatorName string    `gorm:"column:creator_name;type:string;size:32;not null"`
@@ -25,26 +35,34 @@ func (r *Role) TableName() string {
 }
 
 // FindRolesOptions 用來當查詢 Roles 的條件
-type FindRolesOptions struct {
+type FindRoleOptions struct {
 	Namespace string
-	AccountID int64
+	Name      string
+	Limit     int
+	Offset    int
+	Sort      string
 }
 
-// RoleServicer 用來處理 Role 相關業務操作的 service layer
+// RoleUsecase 用來處理 Role 相關業務操作的場景
 type RoleUsecase interface {
-	Role(ctx context.Context, roleID int64) (Role, error)
-	Roles(ctx context.Context, opts FindRolesOptions) ([]Role, int32, error)
-	Count(ctx context.Context, opts FindRolesOptions) (int32, error)
+	Role(ctx context.Context, namespace string, id uint64) (*Role, error)
+	Roles(ctx context.Context, opts FindRoleOptions) ([]Role, error)
 	CreateRole(ctx context.Context, role *Role) error
+	RolesByAccountID(ctx context.Context, namespace string, accountID uint64) ([]Role, error)
+	// Count(ctx context.Context, opts FindRoleOptions) (uint64, error)
 	UpdateRole(ctx context.Context, role *Role) error
+	AddAccountsToRole(ctx context.Context, accountIDs []uint64, roleID uint64) error
+
+	// AddPermissionGroupsToRole(ctx context.Context, accountIDs []uint64, roleID uint64) error
 }
 
 // RoleRepository 用來處理 Role 物件的存儲的行為 repository layer
 type RoleRepository interface {
+	Role(ctx context.Context, namespace string, id uint64) (*Role, error)
+	Roles(ctx context.Context, opts FindRoleOptions) ([]Role, error)
+	RolesByAccountID(ctx context.Context, namespace string, accountID uint64) ([]Role, error)
 	CreateRole(ctx context.Context, role *Role) error
-	Role(ctx context.Context, roleID int64) (*Role, error)
-	Roles(ctx context.Context, opts FindRolesOptions) ([]Role, error)
-	CountRoles(ctx context.Context, namespace string) (int32, error)
+	// CountRoles(ctx context.Context, namespace string) (int32, error)
 	UpdateRole(ctx context.Context, role *Role) error
-	RolesByAccountID(ctx context.Context, accountID int64) ([]Role, error)
+	AddAccountsToRole(ctx context.Context, accountIDs []uint64, roleID uint64) error
 }
