@@ -19,7 +19,7 @@ var (
 
 // Role 代表角色資訊
 type Role struct {
-	ID          uint64    `gorm:"column:id;primaryKey;not null"`
+	ID          uint64    `gorm:"column:id;primaryKey;autoIncrement;not null"`
 	Namespace   string    `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_name;not null"`
 	Name        string    `gorm:"column:name;type:string;size:32;uniqueIndex:uniq_name;not null"`
 	Desc        string    `gorm:"column:desc;type:string;size:512;not null"`

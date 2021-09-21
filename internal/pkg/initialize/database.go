@@ -1,4 +1,4 @@
-package startup
+package initialize
 
 import (
 	"errors"

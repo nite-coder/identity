@@ -1,4 +1,4 @@
-package startup
+package initialize
 
 import (
 	"github.com/nite-coder/blackbear/pkg/config"

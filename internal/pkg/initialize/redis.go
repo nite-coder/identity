@@ -1,4 +1,4 @@
-package startup
+package initialize
 
 type Redis struct {
 	Address  string

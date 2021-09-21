@@ -71,7 +71,6 @@ func (suite *RoleTestSuite) SetupTest() {
 	domain.TableNameAccount = "accounts" + "_" + uuid.NewString()
 	domain.TableNameAccountRole = "accounts_roles" + "_" + uuid.NewString()
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
-	domain.TableNamePermissionGroup = "permission_groups" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
 	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{})
@@ -84,7 +83,6 @@ func (suite *RoleTestSuite) TearDownTest() {
 	domain.TableNameAccount = "accounts" + "_" + uuid.NewString()
 	domain.TableNameAccountRole = "accounts_roles" + "_" + uuid.NewString()
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
-	domain.TableNamePermissionGroup = "permission_groups" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
 	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{})

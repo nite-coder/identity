@@ -37,7 +37,7 @@ func (state AccountState) String() string {
 
 // Account represent account information
 type Account struct {
-	ID                    uint64       `gorm:"primaryKey;autoIncrement;not null"`
+	ID                    uint64       `gorm:"column:id;primaryKey;autoIncrement;not null"`
 	UUID                  string       `gorm:"column:uuid;type:char(36);size:36;uniqueIndex:uniq_uuid;not null"`
 	Namespace             string       `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_username;not null"`
 	Type                  int32        `gorm:"column:type;type:int;not null"`
