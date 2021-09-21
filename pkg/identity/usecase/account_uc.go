@@ -25,20 +25,12 @@ func NewAccountUsecase(accountRepo domain.AccountRepository, eventLogRepo domain
 		eventLogRepo: eventLogRepo,
 	}
 }
-func (uc *AccountUsecase) Account(ctx context.Context, accountID uint64) (*domain.Account, error) {
-	options := domain.FindAccountOptions{
-		ID: accountID,
-	}
-
-	return uc.accountRepo.Account(ctx, options)
+func (uc *AccountUsecase) Account(ctx context.Context, namespace string, accountID uint64) (*domain.Account, error) {
+	return uc.accountRepo.Account(ctx, namespace, accountID)
 }
 
-func (uc *AccountUsecase) AccountByUUID(ctx context.Context, accountUUID string) (*domain.Account, error) {
-	options := domain.FindAccountOptions{
-		UUID: accountUUID,
-	}
-
-	return uc.accountRepo.AccountByUUID(ctx, options)
+func (uc *AccountUsecase) AccountByUUID(ctx context.Context, namespace string, accountUUID string) (*domain.Account, error) {
+	return uc.accountRepo.AccountByUUID(ctx, namespace, accountUUID)
 }
 
 func (uc *AccountUsecase) Accounts(ctx context.Context, opts domain.FindAccountOptions) ([]domain.Account, error) {
@@ -115,19 +107,39 @@ func (uc *AccountUsecase) UpdateAccount(ctx context.Context, account *domain.Acc
 	return uc.accountRepo.UpdateAccount(ctx, account)
 }
 
-func (uc *AccountUsecase) UpdateAccountPassword(ctx context.Context, accountID uint64, oldPassword string, newPassword string, updaterAccountID uint64, updaterUsername string) error {
-	panic("not implemented")
+func (uc *AccountUsecase) UpdateAccountPassword(ctx context.Context, request domain.UpdateAccountPasswordRequest) error {
+	account, err := uc.accountRepo.Account(ctx, request.Namespace, request.AccountID)
+	if err != nil {
+		return err
+	}
+
+	//check old password
+	err = isPasswordValid(account.PasswordEncrypt, request.OldPassword)
+	if err != nil {
+		return domain.ErrUsernameOrPasswordIncorrect
+	}
+
+	//update
+	newPassword, err := encryptPassword(request.NewPassword)
+	if err != nil {
+		return err
+	}
+	account.PasswordEncrypt = newPassword
+	account.UpdaterID = request.UpdaterID
+	account.UpdaterName = request.UpdaterName
+	account.UpdatedAt = time.Now().UTC()
+
+	return uc.accountRepo.UpdateAccountPassword(ctx, account)
 }
 
-func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, accountID uint64, newPassword string, updaterAccountID uint64, updaterUsername string) error {
-	//find account
-	account, err := uc.Account(ctx, accountID)
+func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, request domain.ForceUpdateAccountPasswordRequest) error {
+	account, err := uc.Account(ctx, request.Namespace, request.AccountID)
 	if err != nil {
 		return err
 	}
 
 	//update
-	newPassword, err = encryptPassword(newPassword)
+	newPassword, err := encryptPassword(request.NewPassword)
 	if err != nil {
 		return err
 	}
@@ -136,35 +148,46 @@ func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, accoun
 		ID:              account.ID,
 		PasswordEncrypt: newPassword,
 	}
-	updateAccount.UpdaterID = updaterAccountID
-	updateAccount.UpdaterName = updaterUsername
+	updateAccount.UpdaterID = request.UpdaterID
+	updateAccount.UpdaterName = request.UpdaterName
 	updateAccount.UpdatedAt = time.Now().UTC()
 
 	return uc.accountRepo.UpdateAccountPassword(ctx, &updateAccount)
 }
 
-func (uc *AccountUsecase) LockAccount(ctx context.Context, accountID uint64) error {
-	account := domain.Account{
-		ID:          accountID,
-		State:       domain.AccountStatusLocked,
-		UpdaterName: domain.SystemName,
-		UpdaterID:   domain.SystemID,
-	}
-
-	err := uc.accountRepo.UpdateState(ctx, &account)
+func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.ChangeStateRequest) error {
+	account, err := uc.Account(ctx, request.Namespace, request.AccountID)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
+	if account.State == request.State {
+		return nil
+	}
 
-func (uc *AccountUsecase) DisableAccounts(ctx context.Context, accountIDs []uint64, updaterAccountID uint64, updaterUsername string) error {
-	panic("not implemented")
-}
+	db := database.FromContext(ctx)
+	return db.Transaction(func(tx *gorm.DB) error {
+		ctx = database.ToContext(ctx, tx)
 
-func (uc *AccountUsecase) UnlockAccount(ctx context.Context, accountID uint64) error {
-	panic("not implemented")
+		account.State = request.State
+		account.UpdaterID = request.AccountID
+		account.UpdaterName = request.UpdaterName
+
+		err = uc.accountRepo.UpdateState(ctx, account)
+		if err != nil {
+			return err
+		}
+
+		msg := fmt.Sprintf("change state from %s to %s", account.State.String(), request.State.String())
+		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
+			Namespace: "identity.account",
+			Action:    request.State.String(),
+			TargetID:  strconv.FormatUint(account.ID, 10),
+			Actor:     account.UpdaterName,
+			Message:   msg,
+			State:     domain.EventLogSuccess,
+		})
+	})
 }
 
 func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo) (*domain.Account, error) {
@@ -185,7 +208,10 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo)
 	account := accounts[0]
 
 	//check status
-	if account.State == domain.AccountStatusLocked || account.State == domain.AccountStatusDisabled {
+	switch account.State {
+	case domain.AccountStatusLocked:
+		return nil, domain.ErrAccountLocked
+	case domain.AccountStatusDisabled:
 		return nil, domain.ErrAccountDisabled
 	}
 

@@ -21,34 +21,34 @@ func NewAccountRepo() *AccountRepo {
 	return &AccountRepo{}
 }
 
-func (repo *AccountRepo) Account(ctx context.Context, opts domain.FindAccountOptions) (*domain.Account, error) {
+func (repo *AccountRepo) Account(ctx context.Context, namespace string, accountID uint64) (*domain.Account, error) {
 	logger := log.FromContext(ctx)
 	db := database.FromContext(ctx)
 
 	var account domain.Account
 
-	if err := db.Where("id = ?", opts.ID).Find(&account).Error; err != nil {
+	if err := db.Where("id = ?", accountID).Where("namespace = ?", namespace).Find(&account).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
-		logger.Err(err).Interface("params", opts).Error("mysql: get account failed.")
+		logger.Err(err).Interface("params", accountID).Error("mysql: get account failed.")
 		return &account, err
 	}
 
 	return &account, nil
 }
 
-func (repo *AccountRepo) AccountByUUID(ctx context.Context, opts domain.FindAccountOptions) (*domain.Account, error) {
+func (repo *AccountRepo) AccountByUUID(ctx context.Context, namespace string, uuid string) (*domain.Account, error) {
 	logger := log.FromContext(ctx)
 	db := database.FromContext(ctx)
 
 	var account domain.Account
 
-	if err := db.Where("uuid = ?", opts.UUID).Find(&account).Error; err != nil {
+	if err := db.Where("uuid = ?", uuid).Where("namespace = ?", namespace).Find(&account).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
-		logger.Err(err).Interface("params", opts).Error("mysql: get account by uuid failed.")
+		logger.Err(err).Interface("params", uuid).Error("mysql: get account by uuid failed.")
 		return &account, err
 	}
 

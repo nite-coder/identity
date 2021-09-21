@@ -10,7 +10,6 @@ const (
 	AccountStatusNormal   AccountState = 1 //狀態正常
 	AccountStatusDisabled AccountState = 2 //人工鎖定
 	AccountStatusLocked   AccountState = 3 //密碼錯誤次數過多
-	AccountStatusDeleted  AccountState = 4 //帳號廢除
 
 	SystemName = "system"
 	SystemID   = 0
@@ -23,9 +22,21 @@ var (
 
 type AccountState int32
 
+func (state AccountState) String() string {
+	switch state {
+	case AccountStatusNormal:
+		return "normal"
+	case AccountStatusDisabled:
+		return "disabled"
+	case AccountStatusLocked:
+		return "locked"
+	default:
+		return "unknown"
+	}
+}
+
 // Account represent account information
 type Account struct {
-	tableName             string       `gorm:"column:-"`
 	ID                    uint64       `gorm:"primaryKey;autoIncrement;not null"`
 	UUID                  string       `gorm:"column:uuid;type:char(36);size:36;uniqueIndex:uniq_uuid;not null"`
 	Namespace             string       `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_username;not null"`
@@ -104,20 +115,43 @@ type LoginInfo struct {
 	Password  string `json:"password"`
 }
 
+type UpdateAccountPasswordRequest struct {
+	Namespace   string `json:"namespace,omitempty"`
+	AccountID   uint64
+	OldPassword string
+	NewPassword string
+	UpdaterID   uint64
+	UpdaterName string
+}
+
+type ForceUpdateAccountPasswordRequest struct {
+	Namespace   string `json:"namespace,omitempty"`
+	AccountID   uint64
+	NewPassword string
+	UpdaterID   uint64
+	UpdaterName string
+}
+
+type ChangeStateRequest struct {
+	Namespace   string `json:"namespace,omitempty"`
+	AccountID   uint64
+	State       AccountState
+	UpdaterID   uint64
+	UpdaterName string
+}
+
 // AccountUsecase 用來處理 Account 相關業務操作的 service layer
 type AccountUsecase interface {
-	Account(ctx context.Context, accountID uint64) (*Account, error)
-	AccountByUUID(ctx context.Context, accountUUID string) (*Account, error)
+	Account(ctx context.Context, namespace string, accountID uint64) (*Account, error)
+	AccountByUUID(ctx context.Context, namespace string, uuid string) (*Account, error)
 	Accounts(ctx context.Context, opts FindAccountOptions) ([]Account, error)
 	CountAccounts(ctx context.Context, opts FindAccountOptions) (int64, error)
 	CreateAccount(ctx context.Context, account *Account) (*Account, error)
 	UpdateAccount(ctx context.Context, account *Account) error
-	UpdateAccountPassword(ctx context.Context, accountID uint64, oldPassword string, newPassword string, updaterAccountID uint64, updaterUsername string) error
-	ForceUpdateAccountPassword(ctx context.Context, accountID uint64, newPassword string, updaterAccountID uint64, updaterUsername string) error
-	LockAccount(ctx context.Context, accountID uint64) error
-	UnlockAccount(ctx context.Context, accountID uint64) error
+	UpdateAccountPassword(ctx context.Context, request UpdateAccountPasswordRequest) error
+	ForceUpdateAccountPassword(ctx context.Context, request ForceUpdateAccountPasswordRequest) error
+	ChangeState(ctx context.Context, request ChangeStateRequest) error
 	Login(ctx context.Context, loginInfo LoginInfo) (*Account, error)
-	DisableAccounts(ctx context.Context, accountIDs []uint64, updaterAccountID uint64, updaterUsername string) error
 	ClearOTP(ctx context.Context, accountUUID string) error
 	GenerateOTPAuth(ctx context.Context, accountID uint64) (string, error)
 	SetOTPExpireTime(ctx context.Context, accountUUID string, duration int64) error
@@ -128,8 +162,8 @@ type AccountUsecase interface {
 
 // AccountRepository 用來處理 Account 物件的存儲的行為 repository layer
 type AccountRepository interface {
-	Account(ctx context.Context, opts FindAccountOptions) (*Account, error)
-	AccountByUUID(ctx context.Context, opts FindAccountOptions) (*Account, error)
+	Account(ctx context.Context, namespace string, accountID uint64) (*Account, error)
+	AccountByUUID(ctx context.Context, namespace string, uuid string) (*Account, error)
 	Accounts(ctx context.Context, opts FindAccountOptions) ([]Account, error)
 	AccountsByRoleID(ctx context.Context, namespace string, roleID uint64) ([]Account, error)
 	CreateAccount(ctx context.Context, account *Account) error
