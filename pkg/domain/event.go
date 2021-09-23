@@ -18,7 +18,7 @@ var (
 )
 
 type EventLog struct {
-	ID        uint64        `gorm:"primaryKey;autoIncrement;not null"`
+	ID        uint64        `gorm:"column:id;primaryKey;autoIncrement;not null"`
 	Namespace string        `gorm:"column:namespace;type:string;size:256;not null"`
 	Action    string        `gorm:"column:action;type:string;size:64;not null"`
 	TargetID  string        `gorm:"column:target_id;type:string;size:256;not null"`

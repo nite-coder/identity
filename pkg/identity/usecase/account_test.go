@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/oschwald/geoip2-golang"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/mysql"
@@ -52,10 +53,17 @@ func TestAccountTestSuite(t *testing.T) {
 
 	global.DB = db
 
-	eventLogRepo := identityMysql.NewEventLogRepo(global.DB)
+	eventLogRepo := identityMysql.NewEventLogRepo()
 	accountRepo := identityMysql.NewAccountRepo()
+	loginRepo := identityMysql.NewLoginLogRepo()
 
-	usecase := NewAccountUsecase(accountRepo, eventLogRepo)
+	filePath := "/workspace/data/geoip/geolite.mmdb" // TODO: remove hard code
+	ipDB, err := geoip2.Open(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	usecase := NewAccountUsecase(accountRepo, eventLogRepo, loginRepo, ipDB)
 
 	accountTestSuite := AccountTestSuite{
 		id:          uuid.NewString(),
@@ -76,7 +84,7 @@ func (suite *AccountTestSuite) SetupTest() {
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
-	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{})
+	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
 	suite.Require().NoError(err)
 
 }
@@ -88,7 +96,7 @@ func (suite *AccountTestSuite) TearDownTest() {
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
-	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{})
+	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
 	suite.Require().NoError(err)
 }
 
@@ -144,12 +152,14 @@ func (suite *AccountTestSuite) TestLogin() {
 
 	suite.Run("username was not found", func() {
 		login := domain.LoginInfo{
-			Namespace: suite.namespace,
-			Username:  "no_this_user",
-			Password:  "123456",
+			Namespace:  suite.namespace,
+			Username:   "no_this_user",
+			Password:   "123456",
+			ClientIP:   "182.48.113.104",
+			DeviceType: domain.DeviceTypeWeb,
 		}
 		account, err := suite.usecase.Login(ctx, login)
-		suite.Assert().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
+		suite.Require().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
 		suite.Assert().Nil(account)
 	})
 
@@ -159,9 +169,10 @@ func (suite *AccountTestSuite) TestLogin() {
 			Namespace: suite.namespace,
 			Username:  "halo",
 			Password:  "1111",
+			ClientIP:  "182.48.113.104",
 		}
 		newAccount, err := suite.usecase.Login(ctx, login)
-		suite.Assert().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
+		suite.Require().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
 
 		login.Password = "123456"
 		newAccount, err = suite.usecase.Login(ctx, login)
@@ -180,6 +191,7 @@ func (suite *AccountTestSuite) TestLogin() {
 				Namespace: suite.namespace,
 				Username:  "halo",
 				Password:  "111",
+				ClientIP:  "",
 			}
 			account, err = suite.usecase.Login(ctx, login)
 			suite.Assert().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
@@ -201,9 +213,10 @@ func (suite *AccountTestSuite) TestLogin() {
 			Namespace: suite.namespace,
 			Username:  "halo",
 			Password:  "123456",
+			ClientIP:  "182.48.113.104",
 		}
 		_, err = suite.usecase.Login(ctx, login)
-		suite.Assert().ErrorIs(err, domain.ErrAccountLocked)
+		suite.Require().ErrorIs(err, domain.ErrAccountLocked)
 	})
 }
 
@@ -242,6 +255,7 @@ func (suite *AccountTestSuite) TestChangePassword() {
 			Namespace: suite.namespace,
 			Username:  "halo",
 			Password:  newPassword1,
+			ClientIP:  "",
 		}
 		_, err = suite.usecase.Login(ctx, login)
 		suite.Require().NoError(err)

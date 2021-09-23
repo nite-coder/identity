@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"identity/internal/pkg/database"
 	"identity/pkg/domain"
+	"net"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/oschwald/geoip2-golang"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -17,12 +19,16 @@ import (
 type AccountUsecase struct {
 	accountRepo  domain.AccountRepository
 	eventLogRepo domain.EventLogRepository
+	loginRepo    domain.LoginLogRepository
+	ipDB         geoip2.Reader
 }
 
-func NewAccountUsecase(accountRepo domain.AccountRepository, eventLogRepo domain.EventLogRepository) *AccountUsecase {
+func NewAccountUsecase(accountRepo domain.AccountRepository, eventLogRepo domain.EventLogRepository, loginRepo domain.LoginLogRepository, ipDB *geoip2.Reader) *AccountUsecase {
 	return &AccountUsecase{
 		accountRepo:  accountRepo,
 		eventLogRepo: eventLogRepo,
+		loginRepo:    loginRepo,
+		ipDB:         *ipDB,
 	}
 }
 func (uc *AccountUsecase) Account(ctx context.Context, namespace string, accountID uint64) (*domain.Account, error) {
@@ -87,7 +93,7 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 		}
 
 		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
-			Namespace: "identity.account",
+			Namespace: account.Namespace,
 			Action:    "create",
 			TargetID:  strconv.FormatUint(account.ID, 10),
 			Actor:     account.CreatorName,
@@ -180,7 +186,7 @@ func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.Change
 
 		msg := fmt.Sprintf("change state from %s to %s", account.State.String(), request.State.String())
 		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
-			Namespace: "identity.account",
+			Namespace: request.Namespace,
 			Action:    request.State.String(),
 			TargetID:  strconv.FormatUint(account.ID, 10),
 			Actor:     account.UpdaterName,
@@ -190,10 +196,14 @@ func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.Change
 	})
 }
 
-func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo) (*domain.Account, error) {
+func (uc *AccountUsecase) Login(ctx context.Context, request domain.LoginInfo) (*domain.Account, error) {
+	if len(request.Namespace) == 0 || len(request.Username) == 0 {
+		return nil, domain.ErrInvalidInput
+	}
+
 	options := domain.FindAccountOptions{
-		Namespace: loginInfo.Namespace,
-		Username:  loginInfo.Username,
+		Namespace: request.Namespace,
+		Username:  request.Username,
 	}
 	accounts, err := uc.accountRepo.Accounts(ctx, options)
 
@@ -217,7 +227,7 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo)
 
 	db := database.FromContext(ctx)
 	//compare password
-	err = isPasswordValid(account.PasswordEncrypt, loginInfo.Password)
+	err = isPasswordValid(account.PasswordEncrypt, request.Password)
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 
@@ -229,13 +239,28 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo)
 					return err
 				}
 
-				return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
-					Namespace: "identity.account",
-					Action:    "login",
-					TargetID:  strconv.FormatUint(account.ID, 10),
-					Actor:     account.UpdaterName,
-					Message:   "login failed",
-					State:     domain.EventLogFail,
+				var contryCode, cityName string
+				if len(request.ClientIP) > 0 {
+					ip := net.ParseIP(request.ClientIP)
+					record, err := uc.ipDB.City(ip)
+					if err != nil {
+						return err
+					}
+
+					if len(record.Subdivisions) > 0 {
+						cityName = record.Subdivisions[0].Names["zh-CN"]
+					}
+					contryCode = record.Country.IsoCode
+				}
+
+				return uc.loginRepo.CreateLoginLog(ctx, &domain.LoginLog{
+					Namespace:   request.Namespace,
+					TargetID:    strconv.FormatUint(account.ID, 10),
+					Actor:       account.Username,
+					CountryCode: contryCode,
+					CityName:    cityName,
+					DeviceType:  request.DeviceType,
+					State:       domain.LoginLogFail,
 				})
 			})
 
@@ -249,7 +274,7 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo)
 		return &account, err
 	}
 
-	//清除登入失敗次數
+	//登入成功，清除登入失敗次數
 	err = db.Transaction(func(tx *gorm.DB) error {
 		account.FailedPasswordAttempt = 0
 		account.LastLoginAt = time.Now().UTC()
@@ -258,13 +283,28 @@ func (uc *AccountUsecase) Login(ctx context.Context, loginInfo domain.LoginInfo)
 			return err
 		}
 
-		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
-			Namespace: "identity.account",
-			Action:    "login",
-			TargetID:  strconv.FormatUint(account.ID, 10),
-			Actor:     account.UpdaterName,
-			Message:   "login success",
-			State:     domain.EventLogSuccess,
+		var contryCode, cityName string
+		if len(request.ClientIP) > 0 {
+			ip := net.ParseIP(request.ClientIP)
+			record, err := uc.ipDB.City(ip)
+			if err != nil {
+				return err
+			}
+
+			if len(record.Subdivisions) > 0 {
+				cityName = record.Subdivisions[0].Names["zh-CN"]
+			}
+			contryCode = record.Country.IsoCode
+		}
+
+		return uc.loginRepo.CreateLoginLog(ctx, &domain.LoginLog{
+			Namespace:   request.Namespace,
+			TargetID:    strconv.FormatUint(account.ID, 10),
+			Actor:       account.Username,
+			CountryCode: contryCode,
+			CityName:    cityName,
+			DeviceType:  request.DeviceType,
+			State:       domain.LoginLogSuccess,
 		})
 	})
 
@@ -293,6 +333,10 @@ func (uc *AccountUsecase) VerifyOTP(ctx context.Context, accountUUID string, otp
 
 //AccountIDsByRoleName(ctx context.Context, namespace, roleName string) ([]int64, error)
 func (uc *AccountUsecase) UpdateAccountRole(ctx context.Context, accountID uint64, roles []int64, updaterAccountID uint64, updaterUsername string) error {
+	panic("not implemented")
+}
+
+func (uc *AccountUsecase) AddRolesToAccount(ctx context.Context, request domain.AddRolesToAccountRequest) error {
 	panic("not implemented")
 }
 

@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"github.com/nite-coder/blackbear/pkg/log"
-	"gorm.io/gorm"
 )
 
 type EventLogRepo struct {
 }
 
-func NewEventLogRepo(db *gorm.DB) *EventLogRepo {
+func NewEventLogRepo() *EventLogRepo {
 	return &EventLogRepo{}
 }
 

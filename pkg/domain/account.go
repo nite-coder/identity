@@ -110,9 +110,11 @@ type FindAccountOptions struct {
 
 // LoginInfo 用來傳遞登入資訊
 type LoginInfo struct {
-	Namespace string `json:"namespace,omitempty"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
+	Namespace  string `json:"namespace,omitempty"`
+	DeviceType DeviceType
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	ClientIP   string
 }
 
 type UpdateAccountPasswordRequest struct {
@@ -140,7 +142,45 @@ type ChangeStateRequest struct {
 	UpdaterName string
 }
 
-// AccountUsecase 用來處理 Account 相關業務操作的 service layer
+type LoginLogState uint32
+
+const (
+	LoginLogNone    LoginLogState = 0
+	LoginLogSuccess LoginLogState = 1
+	LoginLogFail    LoginLogState = 2
+)
+
+type DeviceType uint32
+
+const (
+	DeviceTypeNone    DeviceType = 0
+	DeviceTypeWeb     DeviceType = 1
+	DeviceTypeIOS     DeviceType = 2
+	DeviceTypeAndroid DeviceType = 3
+)
+
+type LoginLog struct {
+	ID          uint64        `gorm:"column:id;primaryKey;autoIncrement;not null"`
+	Namespace   string        `gorm:"column:namespace;type:string;size:256;not null"`
+	TargetID    string        `gorm:"column:target_id;type:string;size:256;not null"`
+	Actor       string        `gorm:"column:actor;type:string;size:32;not null"`
+	CountryCode string        `gorm:"column:country_code;type:string;size:32;not null"`
+	CityName    string        `gorm:"column:city_name;type:string;size:32;not null"`
+	DeviceType  DeviceType    `gorm:"column:device_type;type:int;not null"`
+	State       LoginLogState `gorm:"column:state;type:int;not null"`
+	ClientIP    string        `gorm:"column:client_ip;type:string;size:64;not null"`
+	CreatedAt   time.Time     `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+}
+
+type AddRolesToAccountRequest struct {
+	Namespace   string
+	RoleIDs     []uint64
+	AccountID   uint64
+	UpdaterID   uint64
+	UpdaterName string
+}
+
+// AccountUsecase 用來處理 Account 相關業務操作的場景
 type AccountUsecase interface {
 	Account(ctx context.Context, namespace string, accountID uint64) (*Account, error)
 	AccountByUUID(ctx context.Context, namespace string, uuid string) (*Account, error)
@@ -157,7 +197,7 @@ type AccountUsecase interface {
 	SetOTPExpireTime(ctx context.Context, accountUUID string, duration int64) error
 	VerifyOTP(ctx context.Context, accountUUID string, otpCode string) (*Account, error)
 	//AccountIDsByRoleName(ctx context.Context, namespace, roleName string) ([]int64, error)
-	UpdateAccountRole(ctx context.Context, accountID uint64, roles []int64, updaterAccountID uint64, updaterUsername string) error
+	AddRolesToAccount(ctx context.Context, request AddRolesToAccountRequest) error
 }
 
 // AccountRepository 用來處理 Account 物件的存儲的行為 repository layer
@@ -176,4 +216,8 @@ type AccountRepository interface {
 	CountAccounts(ctx context.Context, options FindAccountOptions) (int64, error)
 	//AccountIDsByRoleName(ctx context.Context, roleID int64) ([]int64, error)
 	//UpdateAccountRole(ctx context.Context, accountID int64, roles []int64, updaterAccountID int64, updaterUsername string) error
+}
+
+type LoginLogRepository interface {
+	CreateLoginLog(ctx context.Context, loginLog *LoginLog) error
 }
