@@ -233,6 +233,35 @@ func (repo *AccountRepo) AccountsByRoleID(ctx context.Context, namespace string,
 	return accounts, nil
 }
 
+func (repo *AccountRepo) AddRolesToAccount(ctx context.Context, request domain.AddRolesToAccountRequest) error {
+	logger := log.FromContext(ctx)
+	db := database.FromContext(ctx)
+
+	err := db.Where("account_id = ?", request.AccountID).Delete(&domain.AccountRole{}).Error
+	if err != nil {
+		logger.Err(err).Error("mysql: delete account role failed")
+		return err
+	}
+
+	accountRoles := []domain.AccountRole{}
+
+	for _, roleID := range request.RoleIDs {
+		accountRole := domain.AccountRole{
+			AccountID: request.AccountID,
+			RoleID:    roleID,
+		}
+		accountRoles = append(accountRoles, accountRole)
+	}
+
+	err = db.CreateInBatches(accountRoles, 100).Error
+	if err != nil {
+		logger.Err(err).Error("mysql: add accounts to role failed")
+		return err
+	}
+
+	return nil
+}
+
 func (repo *AccountRepo) buildWhereClause(db *gorm.DB, options domain.FindAccountOptions) *gorm.DB {
 	if options.LoginTimeEnd.Unix() > 0 {
 		db = db.Where("last_login_at BETWEEN ? AND ?", options.LoginTimeStart, options.LoginTimeEnd)

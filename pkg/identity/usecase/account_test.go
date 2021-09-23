@@ -24,6 +24,7 @@ type AccountTestSuite struct {
 	id          string
 	db          *gorm.DB
 	accountRepo domain.AccountRepository
+	roleRepo    domain.RoleRepository
 	usecase     domain.AccountUsecase
 	namespace   string
 }
@@ -55,6 +56,7 @@ func TestAccountTestSuite(t *testing.T) {
 
 	eventLogRepo := identityMysql.NewEventLogRepo()
 	accountRepo := identityMysql.NewAccountRepo()
+	roleRepo := identityMysql.NewRoleRepo()
 	loginRepo := identityMysql.NewLoginLogRepo()
 
 	filePath := "/workspace/data/geoip/geolite.mmdb" // TODO: remove hard code
@@ -69,6 +71,7 @@ func TestAccountTestSuite(t *testing.T) {
 		id:          uuid.NewString(),
 		db:          db,
 		accountRepo: accountRepo,
+		roleRepo:    roleRepo,
 		usecase:     usecase,
 		namespace:   "test.identity",
 	}
@@ -84,7 +87,7 @@ func (suite *AccountTestSuite) SetupTest() {
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
-	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
+	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
 	suite.Require().NoError(err)
 
 }
@@ -96,7 +99,7 @@ func (suite *AccountTestSuite) TearDownTest() {
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
-	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
+	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
 	suite.Require().NoError(err)
 }
 
@@ -310,4 +313,64 @@ func (suite *AccountTestSuite) TestChangeState() {
 	newAccount, err := suite.usecase.Account(ctx, suite.namespace, account.ID)
 	suite.Require().NoError(err)
 	suite.Assert().Equal(domain.AccountStatusLocked, newAccount.State)
+}
+
+func (suite *AccountTestSuite) TestAddRoleToAccount() {
+	ctx := context.Background()
+
+	role1 := domain.Role{
+		Namespace:   suite.namespace,
+		Name:        "finance1",
+		State:       domain.RoleStatusNormal,
+		CreatorID:   1,
+		CreatorName: "admin",
+	}
+
+	err := suite.roleRepo.CreateRole(ctx, &role1)
+	suite.Require().NoError(err)
+
+	role2 := domain.Role{
+		Namespace:   suite.namespace,
+		Name:        "finance2",
+		State:       domain.RoleStatusNormal,
+		CreatorID:   1,
+		CreatorName: "admin",
+	}
+
+	err = suite.roleRepo.CreateRole(ctx, &role2)
+	suite.Require().NoError(err)
+
+	account1 := domain.Account{
+		Namespace:       suite.namespace,
+		UUID:            uuid.NewString(),
+		Username:        "user001",
+		FirstName:       "angela",
+		LastName:        "wang",
+		PasswordEncrypt: "123456",
+		State:           domain.AccountStatusNormal,
+		CreatorID:       1,
+		CreatorName:     "admin",
+	}
+
+	err = suite.accountRepo.CreateAccount(ctx, &account1)
+	suite.Require().NoError(err)
+
+	roleIDs := []uint64{role1.ID, role2.ID}
+
+	AddRolesToAccountRequest := domain.AddRolesToAccountRequest{
+		Namespace:   suite.namespace,
+		RoleIDs:     roleIDs,
+		AccountID:   account1.ID,
+		UpdaterID:   1,
+		UpdaterName: "admin",
+	}
+
+	err = suite.usecase.AddRolesToAccount(ctx, AddRolesToAccountRequest)
+	suite.Require().NoError(err)
+
+	roles, err := suite.roleRepo.RolesByAccountID(ctx, suite.namespace, account1.ID)
+	suite.Require().NoError(err)
+	suite.Assert().Equal(2, len(roles))
+	suite.Assert().Equal("finance1", roles[0].Name)
+	suite.Assert().Equal("finance2", roles[1].Name)
 }

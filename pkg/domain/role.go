@@ -56,8 +56,6 @@ type RoleUsecase interface {
 	// Count(ctx context.Context, opts FindRoleOptions) (uint64, error)
 	UpdateRole(ctx context.Context, role *Role) error
 	AddAccountsToRole(ctx context.Context, accountIDs []uint64, roleID uint64) error
-
-	// AddPermissionGroupsToRole(ctx context.Context, accountIDs []uint64, roleID uint64) error
 }
 
 // RoleRepository 用來處理 Role 物件的存儲的行為 repository layer

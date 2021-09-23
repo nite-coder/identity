@@ -196,7 +196,6 @@ type AccountUsecase interface {
 	GenerateOTPAuth(ctx context.Context, accountID uint64) (string, error)
 	SetOTPExpireTime(ctx context.Context, accountUUID string, duration int64) error
 	VerifyOTP(ctx context.Context, accountUUID string, otpCode string) (*Account, error)
-	//AccountIDsByRoleName(ctx context.Context, namespace, roleName string) ([]int64, error)
 	AddRolesToAccount(ctx context.Context, request AddRolesToAccountRequest) error
 }
 
@@ -214,8 +213,7 @@ type AccountRepository interface {
 	UpdateAccountOTPExpireTime(ctx context.Context, account *Account) error
 	UpdateAccountOTPSecret(ctx context.Context, account *Account) (string, error)
 	CountAccounts(ctx context.Context, options FindAccountOptions) (int64, error)
-	//AccountIDsByRoleName(ctx context.Context, roleID int64) ([]int64, error)
-	//UpdateAccountRole(ctx context.Context, accountID int64, roles []int64, updaterAccountID int64, updaterUsername string) error
+	AddRolesToAccount(ctx context.Context, request AddRolesToAccountRequest) error
 }
 
 type LoginLogRepository interface {

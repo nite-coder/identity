@@ -337,7 +337,7 @@ func (uc *AccountUsecase) UpdateAccountRole(ctx context.Context, accountID uint6
 }
 
 func (uc *AccountUsecase) AddRolesToAccount(ctx context.Context, request domain.AddRolesToAccountRequest) error {
-	panic("not implemented")
+	return uc.accountRepo.AddRolesToAccount(ctx, request)
 }
 
 func encryptPassword(password string) (string, error) {

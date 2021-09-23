@@ -131,7 +131,7 @@ func (repo *RoleRepo) AddAccountsToRole(ctx context.Context, accountIDs []uint64
 
 	err := db.Where("role_id = ?", roleID).Delete(&domain.AccountRole{}).Error
 	if err != nil {
-		logger.Err(err).Error("mysql: delete role failed")
+		logger.Err(err).Error("mysql: delete account role failed")
 		return err
 	}
 
