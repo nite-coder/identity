@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"identity/internal/pkg/global"
 	"identity/pkg/domain"
 	identityMysql "identity/pkg/identity/repository/mysql"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/oschwald/geoip2-golang"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -87,7 +87,9 @@ func (suite *AccountTestSuite) SetupTest() {
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
-	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
+	err := suite.db.Set("gorm:table_options", "AUTO_INCREMENT=100000").AutoMigrate(domain.Account{})
+	suite.Require().NoError(err)
+	err = suite.db.AutoMigrate(domain.EventLog{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
 	suite.Require().NoError(err)
 
 }
@@ -106,56 +108,135 @@ func (suite *AccountTestSuite) TearDownTest() {
 func (suite *AccountTestSuite) TestCreateAccount() {
 	ctx := context.Background()
 
-	account := domain.Account{
-		Namespace:       suite.namespace,
-		Username:        "halo",
+	account1 := domain.Account{
+		Namespace: suite.namespace,
+		Username: sql.NullString{
+			String: "halo",
+			Valid:  true,
+		},
 		PasswordEncrypt: "123456",
 		CreatorID:       1,
 		CreatorName:     "admin",
 		State:           domain.AccountStatusNormal,
 	}
 
-	newAccount, err := suite.usecase.CreateAccount(ctx, &account)
+	err := suite.usecase.CreateAccount(ctx, &account1)
 	suite.Require().NoError(err)
 
-	//assert.Equal(t, 1, newAccount)
-	assert.Equal(suite.T(), account.Username, newAccount.Username)
+	account2 := domain.Account{
+		Namespace: suite.namespace,
+		MobileCountryCode: sql.NullString{
+			String: "886",
+			Valid:  true,
+		},
+		Mobile: sql.NullString{
+			String: "966123456",
+		},
+		PasswordEncrypt: "123456",
+		CreatorID:       1,
+		CreatorName:     "admin",
+		State:           domain.AccountStatusNormal,
+	}
 
-	newAccount1, err := suite.usecase.Account(ctx, suite.namespace, newAccount.ID)
+	err = suite.usecase.CreateAccount(ctx, &account2)
 	suite.Require().NoError(err)
-	assert.Equal(suite.T(), newAccount1.UUID, newAccount.UUID)
 
-	newAccount1, err = suite.usecase.AccountByUUID(ctx, suite.namespace, newAccount.UUID)
+	account3 := domain.Account{
+		Namespace: suite.namespace,
+		Email: sql.NullString{
+			String: "halo@no.com",
+			Valid:  true,
+		},
+		PasswordEncrypt: "123456",
+		CreatorID:       1,
+		CreatorName:     "admin",
+		State:           domain.AccountStatusNormal,
+	}
+
+	err = suite.usecase.CreateAccount(ctx, &account3)
 	suite.Require().NoError(err)
-	assert.Equal(suite.T(), newAccount1.Username, newAccount.Username)
 
 	opts := domain.FindAccountOptions{
 		Namespace: suite.namespace,
 	}
-
 	count, err := suite.usecase.CountAccounts(ctx, opts)
 	suite.Require().NoError(err)
-	suite.Assert().Equal(int64(1), count)
+	suite.Assert().Equal(int64(3), count)
+
+	newAccount1, err := suite.usecase.Account(ctx, suite.namespace, account1.ID)
+	suite.Require().NoError(err)
+	suite.Assert().Equal(newAccount1.Username, account1.Username)
+	suite.Assert().Equal(newAccount1.State, account1.State)
+
+	newAccount1, err = suite.usecase.AccountByUUID(ctx, suite.namespace, account1.UUID)
+	suite.Require().NoError(err)
+	suite.Assert().Equal(newAccount1.Username, newAccount1.Username)
+
 }
 
 func (suite *AccountTestSuite) TestLogin() {
 	ctx := context.Background()
 
-	account := domain.Account{
-		Namespace:       suite.namespace,
-		Username:        "halo",
+	account1 := domain.Account{
+		Namespace: suite.namespace,
+		Username: sql.NullString{
+			String: "halo",
+			Valid:  true,
+		},
 		PasswordEncrypt: "123456",
-		State:           domain.AccountStatusNormal,
 		CreatorID:       1,
 		CreatorName:     "admin",
+		State:           domain.AccountStatusNormal,
 	}
 
-	_, err := suite.usecase.CreateAccount(ctx, &account)
+	err := suite.usecase.CreateAccount(ctx, &account1)
 	suite.Require().NoError(err)
+
+	account2 := domain.Account{
+		Namespace: suite.namespace,
+		MobileCountryCode: sql.NullString{
+			String: "886",
+			Valid:  true,
+		},
+		Mobile: sql.NullString{
+			String: "966123456",
+			Valid:  true,
+		},
+		PasswordEncrypt: "123456",
+		CreatorID:       1,
+		CreatorName:     "admin",
+		State:           domain.AccountStatusNormal,
+	}
+
+	err = suite.usecase.CreateAccount(ctx, &account2)
+	suite.Require().NoError(err)
+
+	account3 := domain.Account{
+		Namespace: suite.namespace,
+		Email: sql.NullString{
+			String: "halo@no.com",
+			Valid:  true,
+		},
+		PasswordEncrypt: "123456",
+		CreatorID:       1,
+		CreatorName:     "admin",
+		State:           domain.AccountStatusNormal,
+	}
+
+	err = suite.usecase.CreateAccount(ctx, &account3)
+	suite.Require().NoError(err)
+
+	opts := domain.FindAccountOptions{
+		Namespace: suite.namespace,
+	}
+	count, err := suite.usecase.CountAccounts(ctx, opts)
+	suite.Require().NoError(err)
+	suite.Assert().Equal(int64(3), count)
 
 	suite.Run("username was not found", func() {
 		login := domain.LoginInfo{
 			Namespace:  suite.namespace,
+			LoginType:  domain.LoginTypeUsername,
 			Username:   "no_this_user",
 			Password:   "123456",
 			ClientIP:   "182.48.113.104",
@@ -166,10 +247,11 @@ func (suite *AccountTestSuite) TestLogin() {
 		suite.Assert().Nil(account)
 	})
 
-	suite.Run("login successfully", func() {
+	suite.Run("username login", func() {
 		now := time.Now()
 		login := domain.LoginInfo{
 			Namespace: suite.namespace,
+			LoginType: domain.LoginTypeUsername,
 			Username:  "halo",
 			Password:  "1111",
 			ClientIP:  "182.48.113.104",
@@ -180,7 +262,48 @@ func (suite *AccountTestSuite) TestLogin() {
 		login.Password = "123456"
 		newAccount, err = suite.usecase.Login(ctx, login)
 		suite.Require().NoError(err)
-		suite.Assert().Equal(account.Username, newAccount.Username)
+		suite.Assert().Equal(account1.Username, newAccount.Username)
+		suite.Assert().True(now.Before(newAccount.LastLoginAt))
+		suite.Assert().Equal(int32(0), newAccount.FailedPasswordAttempt)
+	})
+
+	suite.Run("mobile login", func() {
+		now := time.Now()
+		login := domain.LoginInfo{
+			Namespace:         suite.namespace,
+			LoginType:         domain.LoginTypeMobile,
+			MobileCountryCode: "886",
+			Mobile:            "966123456",
+			Password:          "1111",
+			ClientIP:          "182.48.113.104",
+		}
+		newAccount, err := suite.usecase.Login(ctx, login)
+		suite.Require().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
+
+		login.Password = "123456"
+		newAccount, err = suite.usecase.Login(ctx, login)
+		suite.Require().NoError(err)
+		suite.Assert().Equal(account2.Mobile, newAccount.Mobile)
+		suite.Assert().True(now.Before(newAccount.LastLoginAt))
+		suite.Assert().Equal(int32(0), newAccount.FailedPasswordAttempt)
+	})
+
+	suite.Run("email login", func() {
+		now := time.Now()
+		login := domain.LoginInfo{
+			Namespace: suite.namespace,
+			LoginType: domain.LoginTypeEmail,
+			Email:     "halo@no.com",
+			Password:  "1111",
+			ClientIP:  "182.48.113.104",
+		}
+		newAccount, err := suite.usecase.Login(ctx, login)
+		suite.Require().ErrorIs(err, domain.ErrUsernameOrPasswordIncorrect)
+
+		login.Password = "123456"
+		newAccount, err = suite.usecase.Login(ctx, login)
+		suite.Require().NoError(err)
+		suite.Assert().Equal(account3.Email, newAccount.Email)
 		suite.Assert().True(now.Before(newAccount.LastLoginAt))
 		suite.Assert().Equal(int32(0), newAccount.FailedPasswordAttempt)
 	})
@@ -192,6 +315,7 @@ func (suite *AccountTestSuite) TestLogin() {
 		for i := 0; i < 5; i++ {
 			login := domain.LoginInfo{
 				Namespace: suite.namespace,
+				LoginType: domain.LoginTypeUsername,
 				Username:  "halo",
 				Password:  "111",
 				ClientIP:  "",
@@ -231,8 +355,11 @@ func (suite *AccountTestSuite) TestChangePassword() {
 	newPassword2 := "222222"
 
 	account := domain.Account{
-		Namespace:       suite.namespace,
-		Username:        "halo",
+		Namespace: suite.namespace,
+		Username: sql.NullString{
+			String: "halo",
+			Valid:  true,
+		},
 		PasswordEncrypt: oldPassword,
 		State:           domain.AccountStatusNormal,
 		CreatorID:       1,
@@ -240,7 +367,7 @@ func (suite *AccountTestSuite) TestChangePassword() {
 	}
 
 	suite.Run("update account password", func() {
-		_, err := suite.usecase.CreateAccount(ctx, &account)
+		err := suite.usecase.CreateAccount(ctx, &account)
 		suite.Require().NoError(err)
 
 		request := domain.UpdateAccountPasswordRequest{
@@ -289,15 +416,18 @@ func (suite *AccountTestSuite) TestChangeState() {
 	ctx := context.Background()
 
 	account := domain.Account{
-		Namespace:       suite.namespace,
-		Username:        "halo",
+		Namespace: suite.namespace,
+		Username: sql.NullString{
+			String: "halo",
+			Valid:  true,
+		},
 		PasswordEncrypt: "123456",
 		State:           domain.AccountStatusNormal,
 		CreatorID:       1,
 		CreatorName:     "admin",
 	}
 
-	_, err := suite.usecase.CreateAccount(ctx, &account)
+	err := suite.usecase.CreateAccount(ctx, &account)
 	suite.Require().NoError(err)
 
 	changeStateRequest := domain.ChangeStateRequest{
@@ -341,9 +471,12 @@ func (suite *AccountTestSuite) TestAddRoleToAccount() {
 	suite.Require().NoError(err)
 
 	account1 := domain.Account{
-		Namespace:       suite.namespace,
-		UUID:            uuid.NewString(),
-		Username:        "user001",
+		Namespace: suite.namespace,
+		UUID:      uuid.NewString(),
+		Username: sql.NullString{
+			String: "user001",
+			Valid:  true,
+		},
 		FirstName:       "angela",
 		LastName:        "wang",
 		PasswordEncrypt: "123456",

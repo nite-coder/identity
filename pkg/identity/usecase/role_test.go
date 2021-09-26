@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"identity/internal/pkg/global"
 	"identity/pkg/domain"
 	identityMysql "identity/pkg/identity/repository/mysql"
@@ -73,7 +74,9 @@ func (suite *RoleTestSuite) SetupTest() {
 	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
 	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
 
-	err := suite.db.AutoMigrate(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
+	err := suite.db.Set("gorm:table_options", "AUTO_INCREMENT=100000").AutoMigrate(domain.Account{})
+	suite.Require().NoError(err)
+	err = suite.db.AutoMigrate(domain.EventLog{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
 	suite.Require().NoError(err)
 
 }
@@ -139,9 +142,12 @@ func (suite *RoleTestSuite) TestAddAccountsToRole() {
 	suite.Require().NoError(err)
 
 	account1 := domain.Account{
-		Namespace:       suite.namespace,
-		UUID:            uuid.NewString(),
-		Username:        "user001",
+		Namespace: suite.namespace,
+		UUID:      uuid.NewString(),
+		Username: sql.NullString{
+			String: "user001",
+			Valid:  true,
+		},
 		FirstName:       "angela",
 		LastName:        "wang",
 		PasswordEncrypt: "123456",
@@ -154,9 +160,12 @@ func (suite *RoleTestSuite) TestAddAccountsToRole() {
 	suite.Require().NoError(err)
 
 	account2 := domain.Account{
-		Namespace:       suite.namespace,
-		UUID:            uuid.NewString(),
-		Username:        "user002",
+		Namespace: suite.namespace,
+		UUID:      uuid.NewString(),
+		Username: sql.NullString{
+			String: "user002",
+			Valid:  true,
+		},
 		FirstName:       "jordan",
 		PasswordEncrypt: "123456",
 		State:           domain.AccountStatusNormal,
@@ -175,7 +184,7 @@ func (suite *RoleTestSuite) TestAddAccountsToRole() {
 	accounts, err := suite.accountRepo.AccountsByRoleID(ctx, suite.namespace, role.ID)
 	suite.Require().NoError(err)
 	suite.Assert().Equal(2, len(accounts))
-	suite.Assert().Equal("user001", accounts[0].Username)
+	suite.Assert().Equal("user001", accounts[0].Username.String)
 
 	roles, err := suite.usecase.RolesByAccountID(ctx, suite.namespace, account2.ID)
 	suite.Require().NoError(err)

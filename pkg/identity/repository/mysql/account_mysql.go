@@ -295,6 +295,10 @@ func (repo *AccountRepo) buildWhereClause(db *gorm.DB, options domain.FindAccoun
 		db = db.Where(" email = ?", options.Email)
 	}
 
+	if options.MobileCountryCode != "" {
+		db = db.Where(" mobile_country_code = ?", options.MobileCountryCode)
+	}
+
 	if options.Mobile != "" {
 		db = db.Where(" mobile = ?", options.Mobile)
 	}

@@ -55,23 +55,23 @@ func (uc *AccountUsecase) CountAccounts(ctx context.Context, opts domain.FindAcc
 	return total, nil
 }
 
-func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Account) (*domain.Account, error) {
+func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Account) error {
 	var err error
 
 	if account.Namespace == "" {
-		return nil, fmt.Errorf("namespace is empty. %w", domain.ErrInvalidInput)
+		return fmt.Errorf("namespace can't empty. %w", domain.ErrInvalidInput)
 	}
 
-	if account.Username == "" {
-		return nil, fmt.Errorf("username is empty. %w", domain.ErrInvalidInput)
+	if !account.Username.Valid && (!account.MobileCountryCode.Valid && !account.Mobile.Valid) && !account.Email.Valid {
+		return fmt.Errorf("login name can't be empty. %w", domain.ErrInvalidInput)
 	}
 
 	if account.PasswordEncrypt == "" {
-		return nil, fmt.Errorf("username is empty. %w", domain.ErrInvalidInput)
+		return fmt.Errorf("password can't be empty. %w", domain.ErrInvalidInput)
 	}
 
 	if account.CreatorName == "" {
-		return nil, fmt.Errorf("creator name is empty. %w", domain.ErrInvalidInput)
+		return fmt.Errorf("creator name can't empty. %w", domain.ErrInvalidInput)
 	}
 
 	account.UUID = uuid.NewString()
@@ -80,7 +80,7 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 	account.OTPLastResetAt = time.Unix(0, 0)
 	account.LastLoginAt = time.Unix(0, 0)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	db := database.FromContext(ctx)
@@ -103,10 +103,10 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return account, nil
+	return nil
 }
 
 func (uc *AccountUsecase) UpdateAccount(ctx context.Context, account *domain.Account) error {
@@ -197,15 +197,24 @@ func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.Change
 }
 
 func (uc *AccountUsecase) Login(ctx context.Context, request domain.LoginInfo) (*domain.Account, error) {
-	if len(request.Namespace) == 0 || len(request.Username) == 0 {
+	if len(request.Namespace) == 0 && len(request.Username) == 0 && request.Email == "" && (request.Mobile == "" || request.MobileCountryCode == "") {
 		return nil, domain.ErrInvalidInput
 	}
 
-	options := domain.FindAccountOptions{
+	opts := domain.FindAccountOptions{
 		Namespace: request.Namespace,
-		Username:  request.Username,
 	}
-	accounts, err := uc.accountRepo.Accounts(ctx, options)
+
+	switch request.LoginType {
+	case domain.LoginTypeUsername:
+		opts.Username = request.Username
+	case domain.LoginTypeEmail:
+		opts.Email = request.Email
+	case domain.LoginTypeMobile:
+		opts.MobileCountryCode = request.MobileCountryCode
+		opts.Mobile = request.Mobile
+	}
+	accounts, err := uc.accountRepo.Accounts(ctx, opts)
 
 	if err != nil {
 		return nil, err
@@ -256,7 +265,6 @@ func (uc *AccountUsecase) Login(ctx context.Context, request domain.LoginInfo) (
 				return uc.loginRepo.CreateLoginLog(ctx, &domain.LoginLog{
 					Namespace:   request.Namespace,
 					TargetID:    strconv.FormatUint(account.ID, 10),
-					Actor:       account.Username,
 					CountryCode: contryCode,
 					CityName:    cityName,
 					DeviceType:  request.DeviceType,
@@ -300,7 +308,6 @@ func (uc *AccountUsecase) Login(ctx context.Context, request domain.LoginInfo) (
 		return uc.loginRepo.CreateLoginLog(ctx, &domain.LoginLog{
 			Namespace:   request.Namespace,
 			TargetID:    strconv.FormatUint(account.ID, 10),
-			Actor:       account.Username,
 			CountryCode: contryCode,
 			CityName:    cityName,
 			DeviceType:  request.DeviceType,

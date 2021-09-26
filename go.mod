@@ -11,7 +11,7 @@ require (
 	github.com/lib/pq v1.10.3 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/nite-coder/blackbear v0.0.0-20210902022855-9131a3786f25
-	github.com/oschwald/geoip2-golang v1.5.0 // indirect
+	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/rotisserie/eris v0.5.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
