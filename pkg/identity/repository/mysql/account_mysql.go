@@ -107,6 +107,7 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 	args["otp_effective_at"] = account.OTPEffectiveAt
 	args["first_name"] = account.FirstName
 	args["last_name"] = account.LastName
+	args["nick_name"] = account.NickName
 	args["avatar"] = account.Avatar
 	args["email"] = account.Email
 	args["mobile"] = account.Mobile

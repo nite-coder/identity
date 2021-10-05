@@ -24,7 +24,7 @@ type EventLog struct {
 	Namespace string         `gorm:"column:namespace;type:string;size:256;not null"`
 	Action    string         `gorm:"column:action;type:string;size:64;not null"`
 	TargetID  string         `gorm:"column:target_id;type:string;size:256;not null"`
-	Message   string         `gorm:"column:namespace;type:string;size:256;not null"`
+	Message   string         `gorm:"column:message;type:string;size:512;not null"`
 	OldStatus datatypes.JSON `gorm:"column:old_status;type:json;not null"`
 	NewStatus datatypes.JSON `gorm:"column:new_status;type:json;not null"`
 	State     EventLogState  `gorm:"column:state;type:int;not null"`

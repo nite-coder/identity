@@ -86,7 +86,7 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 	}
 
 	db := database.FromContext(ctx)
-	err = db.Transaction(func(tx *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
 		ctx = database.ToContext(ctx, tx)
 
 		err = uc.accountRepo.CreateAccount(ctx, account)
@@ -100,7 +100,7 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 		}
 
 		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
-			Namespace: account.Namespace,
+			Namespace: "identity.account",
 			Action:    "create",
 			TargetID:  strconv.FormatUint(account.ID, 10),
 			Message:   "account is created",
@@ -110,16 +110,48 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 			Actor:     account.CreatorName,
 		})
 	})
+}
 
+func (uc *AccountUsecase) UpdateAccount(ctx context.Context, request *domain.Account) error {
+	account, err := uc.accountRepo.Account(ctx, request.Namespace, request.ID)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
+	if account.Version != request.Version {
+		return domain.ErrStale
+	}
 
-func (uc *AccountUsecase) UpdateAccount(ctx context.Context, account *domain.Account) error {
-	return uc.accountRepo.UpdateAccount(ctx, account)
+	db := database.FromContext(ctx)
+	return db.Transaction(func(tx *gorm.DB) error {
+		ctx = database.ToContext(ctx, tx)
+
+		oldStatus, err := json.Marshal(&account)
+		if err != nil {
+			return err
+		}
+
+		err = uc.accountRepo.UpdateAccount(ctx, request)
+		if err != nil {
+			return err
+		}
+
+		newStatus, err := json.Marshal(&account)
+		if err != nil {
+			return err
+		}
+
+		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
+			Namespace: "identity.account",
+			Action:    "update",
+			TargetID:  strconv.FormatUint(account.ID, 10),
+			Message:   "update account",
+			OldStatus: oldStatus,
+			NewStatus: newStatus,
+			State:     domain.EventLogSuccess,
+			Actor:     request.UpdaterName,
+		})
+	})
 }
 
 func (uc *AccountUsecase) UpdateAccountPassword(ctx context.Context, request domain.UpdateAccountPasswordRequest) error {
@@ -201,8 +233,8 @@ func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.Change
 		}
 
 		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
-			Namespace: request.Namespace,
-			Action:    request.State.String(),
+			Namespace: "identity.account",
+			Action:    "change_state",
 			TargetID:  strconv.FormatUint(account.ID, 10),
 			Message:   fmt.Sprintf("change state from %s to %s", account.State.String(), request.State.String()),
 			OldStatus: oldStatus,

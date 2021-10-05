@@ -105,7 +105,7 @@ func (suite *AccountTestSuite) TearDownTest() {
 	suite.Require().NoError(err)
 }
 
-func (suite *AccountTestSuite) TestCreateAccount() {
+func (suite *AccountTestSuite) TestCRUDAccount() {
 	ctx := context.Background()
 
 	account1 := domain.Account{
@@ -171,6 +171,22 @@ func (suite *AccountTestSuite) TestCreateAccount() {
 	newAccount1, err = suite.usecase.AccountByUUID(ctx, suite.namespace, account1.UUID)
 	suite.Require().NoError(err)
 	suite.Assert().Equal(newAccount1.Username, newAccount1.Username)
+
+	suite.Run("update account", func() {
+		account3.NickName = "nickname_halo"
+		account3.FirstName = "halo"
+		account3.LastName = "hello"
+
+		err = suite.usecase.UpdateAccount(ctx, &account3)
+		suite.Require().NoError(err)
+
+		newAccount3, err := suite.usecase.Account(ctx, suite.namespace, account3.ID)
+		suite.Require().NoError(err)
+
+		suite.Assert().Equal(account3.NickName, newAccount3.NickName)
+		suite.Assert().Equal(account3.FirstName, newAccount3.FirstName)
+		suite.Assert().Equal(account3.LastName, newAccount3.LastName)
+	})
 
 }
 
