@@ -147,10 +147,22 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 	args["updater_name"] = account.UpdaterName
 	args["updated_at"] = time.Now().UTC()
 
-	if err := db.Model(account).Where("id = ?", account.ID).UpdateColumns(args).Error; err != nil {
-		logger.Err(err).Interface("params", account).Error("mysql:uUpdate account password failed")
+	result := db.Model(account).
+		Where("id = ?", account.ID).
+		Where("version = @version", sql.Named("version", account.Version)).
+		UpdateColumns(args).
+		UpdateColumn("version", gorm.Expr("version + 1"))
+
+	err := result.Error
+	if err != nil {
+		logger.Err(err).Interface("params", account).Error("mysql:update account password failed")
 		return err
 	}
+
+	if result.RowsAffected == 0 {
+		return domain.ErrStale
+	}
+
 	return nil
 }
 
@@ -167,6 +179,7 @@ func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Accoun
 
 	result := db.Model(account).
 		Where("id = ?", account.ID).
+		Where("version = @version", sql.Named("version", account.Version)).
 		UpdateColumns(args).
 		UpdateColumn("version", gorm.Expr("version + 1"))
 

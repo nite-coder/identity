@@ -148,7 +148,7 @@ func (uc *AccountUsecase) UpdateAccountPassword(ctx context.Context, request dom
 }
 
 func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, request domain.ForceUpdateAccountPasswordRequest) error {
-	account, err := uc.Account(ctx, request.Namespace, request.AccountID)
+	account, err := uc.accountRepo.Account(ctx, request.Namespace, request.AccountID)
 	if err != nil {
 		return err
 	}
@@ -159,15 +159,12 @@ func (uc *AccountUsecase) ForceUpdateAccountPassword(ctx context.Context, reques
 		return err
 	}
 
-	updateAccount := domain.Account{
-		ID:              account.ID,
-		PasswordEncrypt: newPassword,
-	}
-	updateAccount.UpdaterID = request.UpdaterID
-	updateAccount.UpdaterName = request.UpdaterName
-	updateAccount.UpdatedAt = time.Now().UTC()
+	account.PasswordEncrypt = newPassword
+	account.UpdaterID = request.UpdaterID
+	account.UpdaterName = request.UpdaterName
+	account.UpdatedAt = time.Now().UTC()
 
-	return uc.accountRepo.UpdateAccountPassword(ctx, &updateAccount)
+	return uc.accountRepo.UpdateAccountPassword(ctx, account)
 }
 
 func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.ChangeStateRequest) error {
