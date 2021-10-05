@@ -14,12 +14,13 @@ require (
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/rotisserie/eris v0.5.1
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/sys v0.0.0-20210921065528-437939a70204 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
-	google.golang.org/grpc v1.40.0
+	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
+	gorm.io/datatypes v1.0.2
 	gorm.io/driver/mysql v1.1.2
-	gorm.io/driver/postgres v1.1.1
+	gorm.io/driver/postgres v1.1.2
 	gorm.io/gorm v1.21.15
 )

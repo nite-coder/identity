@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"identity/internal/pkg/database"
@@ -13,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/oschwald/geoip2-golang"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -92,13 +94,20 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 			return err
 		}
 
+		newStatus, err := json.Marshal(&account)
+		if err != nil {
+			return err
+		}
+
 		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
 			Namespace: account.Namespace,
 			Action:    "create",
 			TargetID:  strconv.FormatUint(account.ID, 10),
-			Actor:     account.CreatorName,
 			Message:   "account is created",
+			OldStatus: datatypes.JSON([]byte("{}")),
+			NewStatus: newStatus,
 			State:     domain.EventLogSuccess,
+			Actor:     account.CreatorName,
 		})
 	})
 
@@ -175,6 +184,11 @@ func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.Change
 	return db.Transaction(func(tx *gorm.DB) error {
 		ctx = database.ToContext(ctx, tx)
 
+		oldStatus, err := json.Marshal(&account)
+		if err != nil {
+			return err
+		}
+
 		account.State = request.State
 		account.UpdaterID = request.AccountID
 		account.UpdaterName = request.UpdaterName
@@ -184,14 +198,20 @@ func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.Change
 			return err
 		}
 
-		msg := fmt.Sprintf("change state from %s to %s", account.State.String(), request.State.String())
+		newStatus, err := json.Marshal(&account)
+		if err != nil {
+			return err
+		}
+
 		return uc.eventLogRepo.CreateEventLog(ctx, &domain.EventLog{
 			Namespace: request.Namespace,
 			Action:    request.State.String(),
 			TargetID:  strconv.FormatUint(account.ID, 10),
-			Actor:     account.UpdaterName,
-			Message:   msg,
+			Message:   fmt.Sprintf("change state from %s to %s", account.State.String(), request.State.String()),
+			OldStatus: oldStatus,
+			NewStatus: newStatus,
 			State:     domain.EventLogSuccess,
+			Actor:     account.UpdaterName,
 		})
 	})
 }
