@@ -49,7 +49,7 @@ func main() {
 	}()
 
 	stopChan := make(chan os.Signal, 1)
-	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGTERM)
+	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM)
 	<-stopChan
 	log.Info("main: shutting down server...")
 

@@ -52,12 +52,12 @@ func (repo *RoleRepo) UpdateRole(ctx context.Context, role *domain.Role) error {
 	args["updater_id"] = role.UpdaterID
 	args["updater_name"] = role.UpdaterName
 	args["updated_at"] = time.Now().UTC()
+	args["version"] = gorm.Expr("version + 1")
 
 	result := db.Model(role).
 		Where("id = ?", role.ID).
 		Where("version = @version", sql.Named("version", role.Version)).
-		UpdateColumns(args).
-		UpdateColumn("version", gorm.Expr("version + 1"))
+		Updates(args)
 
 	err := result.Error
 	if err != nil {

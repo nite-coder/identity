@@ -3,8 +3,6 @@ package initialize
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -117,30 +115,4 @@ func InitDatabase(name string) (*gorm.DB, error) {
 
 	return nil, fmt.Errorf("startup: database name was not found. name: %s", name)
 
-}
-
-func RunSQLScripts(db *gorm.DB, dirPath string) error {
-	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-
-		data, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		// TODO: it seems to me that if we turn gorm prepare config to true, we will receive the error here.  Now, we just turn that off.
-		err = db.Exec(string(data)).Error
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

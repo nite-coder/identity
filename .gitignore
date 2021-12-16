@@ -14,7 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-/data/geoip
-/mysql
+/data
+
 app.yml
 config/app.yml

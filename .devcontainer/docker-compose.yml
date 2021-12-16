@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  app:
+  vscode:
     build:
       context: .
       dockerfile: Dockerfile
@@ -19,6 +19,10 @@ services:
     # Overrides default command so things don't shut down after the process ends.
     entrypoint: /usr/local/share/docker-init.sh
     command: sleep infinity
+    network_mode: host
+
+    environment:
+    - DEBUG=1
 
     # Uncomment the next four lines if you will use a ptrace-based debuggers like C++, Go, and Rust.
     cap_add:
@@ -31,10 +35,3 @@ services:
 
     # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
-
-    networks:
-      - dev-network
-
-networks:
-  dev-network:
-    name: dev-network

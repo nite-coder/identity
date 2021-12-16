@@ -119,12 +119,12 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 	args["updater_id"] = account.UpdaterID
 	args["updater_name"] = account.UpdaterName
 	args["updated_at"] = time.Now().UTC()
+	args["version"] = gorm.Expr("version + 1")
 
 	result := db.Model(account).
 		Where("id = ?", account.ID).
 		Where("version = @version", sql.Named("version", account.Version)).
-		UpdateColumns(args).
-		UpdateColumn("version", gorm.Expr("version + 1"))
+		Updates(args)
 
 	err := result.Error
 	if err != nil {
@@ -147,12 +147,12 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 	args["updater_id"] = account.UpdaterID
 	args["updater_name"] = account.UpdaterName
 	args["updated_at"] = time.Now().UTC()
+	args["version"] = gorm.Expr("version + 1")
 
 	result := db.Model(account).
 		Where("id = ?", account.ID).
 		Where("version = @version", sql.Named("version", account.Version)).
-		UpdateColumns(args).
-		UpdateColumn("version", gorm.Expr("version + 1"))
+		Updates(args)
 
 	err := result.Error
 	if err != nil {
@@ -177,12 +177,12 @@ func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Accoun
 	args["updater_id"] = account.UpdaterID
 	args["updater_name"] = account.UpdaterName
 	args["updated_at"] = time.Now().UTC()
+	args["version"] = gorm.Expr("version + 1")
 
 	result := db.Model(account).
 		Where("id = ?", account.ID).
 		Where("version = @version", sql.Named("version", account.Version)).
-		UpdateColumns(args).
-		UpdateColumn("version", gorm.Expr("version + 1"))
+		Updates(args)
 
 	err := result.Error
 	if err != nil {

@@ -44,7 +44,7 @@ func TestRoleTestSuite(t *testing.T) {
 		Logger: dbLogger,
 	}
 
-	dsn := "root:root@tcp(mysql:3306)/identity_db?charset=utf8mb4&parseTime=true&timeout=60s"
+	dsn := "root:root@tcp(localhost:3306)/identity_db?charset=utf8mb4&parseTime=true&timeout=60s"
 	db, err := gorm.Open(mysql.Open(dsn), &gormConfig)
 	if err != nil {
 		panic(err)
