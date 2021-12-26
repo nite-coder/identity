@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"identity/internal/pkg/database"
+	"identity/internal/pkg/global"
 	"identity/pkg/domain"
 	"time"
 
@@ -97,14 +98,10 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 	db := database.FromContext(ctx)
 
 	args := make(map[string]interface{})
-	args["id"] = account.ID
-	args["uuid"] = account.UUID
-	args["namespace"] = account.Namespace
 	args["type"] = account.Type
 	args["username"] = account.Username
 	args["otp_enable"] = account.OTPEnable
 	args["otp_secret"] = account.OTPSecret
-	args["otp_effective_at"] = account.OTPEffectiveAt
 	args["first_name"] = account.FirstName
 	args["last_name"] = account.LastName
 	args["nick_name"] = account.NickName
@@ -119,7 +116,7 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 	args["updater_id"] = account.UpdaterID
 	args["updater_name"] = account.UpdaterName
 	args["updated_at"] = time.Now().UTC()
-	args["version"] = gorm.Expr("version + 1")
+	args["version"] = gorm.Expr(global.VersionAddOne)
 
 	result := db.Model(account).
 		Where("id = ?", account.ID).
@@ -147,7 +144,7 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 	args["updater_id"] = account.UpdaterID
 	args["updater_name"] = account.UpdaterName
 	args["updated_at"] = time.Now().UTC()
-	args["version"] = gorm.Expr("version + 1")
+	args["version"] = gorm.Expr(global.VersionAddOne)
 
 	result := db.Model(account).
 		Where("id = ?", account.ID).
@@ -177,7 +174,7 @@ func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Accoun
 	args["updater_id"] = account.UpdaterID
 	args["updater_name"] = account.UpdaterName
 	args["updated_at"] = time.Now().UTC()
-	args["version"] = gorm.Expr("version + 1")
+	args["version"] = gorm.Expr(global.VersionAddOne)
 
 	result := db.Model(account).
 		Where("id = ?", account.ID).
@@ -196,15 +193,7 @@ func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Accoun
 	return nil
 }
 
-func (repo *AccountRepo) ClearOTP(ctx context.Context, accountUUID string) error {
-	panic("not implemented")
-}
-
-func (repo *AccountRepo) UpdateAccountOTPExpireTime(ctx context.Context, account *domain.Account) error {
-	panic("not implemented")
-}
-
-func (repo *AccountRepo) UpdateAccountOTPSecret(ctx context.Context, account *domain.Account) (string, error) {
+func (repo *AccountRepo) UpdateOTPSecret(ctx context.Context, account *domain.Account) (string, error) {
 	panic("not implemented")
 }
 

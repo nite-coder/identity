@@ -95,10 +95,10 @@ func (suite *AccountTestSuite) SetupTest() {
 
 }
 
-// func (suite *AccountTestSuite) TearDownTest() {
-// 	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
-// 	suite.Require().NoError(err)
-// }
+func (suite *AccountTestSuite) TearDownTest() {
+	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
+	suite.Require().NoError(err)
+}
 
 func (suite *AccountTestSuite) TestCRUDAccount() {
 	ctx := context.Background()

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"identity/internal/pkg/database"
+	"identity/internal/pkg/global"
 	"identity/pkg/domain"
 	"time"
 
@@ -52,7 +53,7 @@ func (repo *RoleRepo) UpdateRole(ctx context.Context, role *domain.Role) error {
 	args["updater_id"] = role.UpdaterID
 	args["updater_name"] = role.UpdaterName
 	args["updated_at"] = time.Now().UTC()
-	args["version"] = gorm.Expr("version + 1")
+	args["version"] = gorm.Expr(global.VersionAddOne)
 
 	result := db.Model(role).
 		Where("id = ?", role.ID).

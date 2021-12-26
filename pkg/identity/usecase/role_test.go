@@ -68,8 +68,6 @@ func TestRoleTestSuite(t *testing.T) {
 }
 
 func (suite *RoleTestSuite) SetupTest() {
-
-
 	err := suite.db.Set("gorm:table_options", "AUTO_INCREMENT=100000").AutoMigrate(domain.Account{})
 	suite.Require().NoError(err)
 	err = suite.db.AutoMigrate(domain.EventLog{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
@@ -78,8 +76,6 @@ func (suite *RoleTestSuite) SetupTest() {
 }
 
 func (suite *RoleTestSuite) TearDownTest() {
-
-
 	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
 	suite.Require().NoError(err)
 }

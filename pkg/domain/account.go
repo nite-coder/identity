@@ -50,7 +50,6 @@ type Account struct {
 	FailedPasswordAttempt int32          `gorm:"column:failed_password_attempt;type:int;not null"`
 	OTPEnable             int32          `gorm:"column:otp_enable;type:tinyint;not null"`
 	OTPSecret             string         `gorm:"column:otp_secret;type:string;size:64;not null"`
-	OTPEffectiveAt        time.Time      `gorm:"column:otp_effective_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	OTPLastResetAt        time.Time      `gorm:"column:otp_last_reset_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	ClientIP              string         `gorm:"column:client_ip;type:string;size:64;not null"`
 	Note                  string         `gorm:"column:notes;type:string;size:512;not null"`
@@ -100,8 +99,9 @@ type FindAccountOptions struct {
 type LoginType uint32
 
 const (
-	LoginTypeUsername LoginType = 0
-	LoginTypeEmail    LoginType = 1
+	LoginTypeDefault  LoginType = 0
+	LoginTypeUsername LoginType = 1
+	LoginTypeEmail    LoginType = 2
 	LoginTypeMobile   LoginType = 3
 )
 
@@ -146,7 +146,7 @@ type ChangeStateRequest struct {
 type LoginLogState uint32
 
 const (
-	LoginLogNone    LoginLogState = 0
+	LoginLogDefault LoginLogState = 0
 	LoginLogSuccess LoginLogState = 1
 	LoginLogFail    LoginLogState = 2
 )
@@ -154,7 +154,7 @@ const (
 type DeviceType uint32
 
 const (
-	DeviceTypeNone    DeviceType = 0
+	DeviceTypeDefault DeviceType = 0
 	DeviceTypeWeb     DeviceType = 1
 	DeviceTypeIOS     DeviceType = 2
 	DeviceTypeAndroid DeviceType = 3
@@ -180,6 +180,17 @@ type AddRolesToAccountRequest struct {
 	UpdaterName string
 }
 
+type ResetOTPSecretRequest struct {
+	Namespace string
+	AccountID uint64
+}
+
+type VerifyOTPRequest struct {
+	Namespace string
+	AccountID uint64
+	OTPCode   string
+}
+
 // AccountUsecase 用來處理 Account 相關業務操作的場景
 type AccountUsecase interface {
 	Account(ctx context.Context, namespace string, accountID uint64) (*Account, error)
@@ -192,10 +203,8 @@ type AccountUsecase interface {
 	ForceUpdateAccountPassword(ctx context.Context, request ForceUpdateAccountPasswordRequest) error
 	ChangeState(ctx context.Context, request ChangeStateRequest) error
 	Login(ctx context.Context, loginInfo LoginInfo) (*Account, error)
-	ClearOTP(ctx context.Context, accountUUID string) error
-	GenerateOTPAuth(ctx context.Context, accountID uint64) (string, error)
-	SetOTPExpireTime(ctx context.Context, accountUUID string, duration int64) error
-	VerifyOTP(ctx context.Context, accountUUID string, otpCode string) (*Account, error)
+	ResetOTPSecret(ctx context.Context, request ResetOTPSecretRequest) (string, error)
+	VerifyOTP(ctx context.Context, accountUUID string, request VerifyOTPRequest) error
 	AddRolesToAccount(ctx context.Context, request AddRolesToAccountRequest) error
 }
 
@@ -209,9 +218,7 @@ type AccountRepository interface {
 	UpdateAccount(ctx context.Context, account *Account) error
 	UpdateAccountPassword(ctx context.Context, account *Account) error
 	UpdateState(ctx context.Context, account *Account) error
-	ClearOTP(ctx context.Context, accountUUID string) error
-	UpdateAccountOTPExpireTime(ctx context.Context, account *Account) error
-	UpdateAccountOTPSecret(ctx context.Context, account *Account) (string, error)
+	UpdateOTPSecret(ctx context.Context, account *Account) (string, error)
 	CountAccounts(ctx context.Context, options FindAccountOptions) (int64, error)
 	AddRolesToAccount(ctx context.Context, request AddRolesToAccountRequest) error
 }

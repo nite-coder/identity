@@ -78,7 +78,6 @@ func (uc *AccountUsecase) CreateAccount(ctx context.Context, account *domain.Acc
 
 	account.UUID = uuid.NewString()
 	account.PasswordEncrypt, err = encryptPassword(account.PasswordEncrypt)
-	account.OTPEffectiveAt = time.Unix(0, 0)
 	account.OTPLastResetAt = time.Unix(0, 0)
 	account.LastLoginAt = time.Unix(0, 0)
 	if err != nil {
@@ -371,24 +370,11 @@ func (uc *AccountUsecase) Login(ctx context.Context, request domain.LoginInfo) (
 	return &account, nil
 }
 
-func (uc *AccountUsecase) ClearOTP(ctx context.Context, accountUUID string) error {
+func (uc *AccountUsecase) ResetOTPSecret(ctx context.Context, request domain.ResetOTPSecretRequest) (string, error) {
 	panic("not implemented")
 }
 
-func (uc *AccountUsecase) GenerateOTPAuth(ctx context.Context, accountID uint64) (string, error) {
-	panic("not implemented")
-}
-
-func (uc *AccountUsecase) SetOTPExpireTime(ctx context.Context, accountUUID string, duration int64) error {
-	panic("not implemented")
-}
-
-func (uc *AccountUsecase) VerifyOTP(ctx context.Context, accountUUID string, otpCode string) (*domain.Account, error) {
-	panic("not implemented")
-}
-
-//AccountIDsByRoleName(ctx context.Context, namespace, roleName string) ([]int64, error)
-func (uc *AccountUsecase) UpdateAccountRole(ctx context.Context, accountID uint64, roles []int64, updaterAccountID uint64, updaterUsername string) error {
+func (uc *AccountUsecase) VerifyOTP(ctx context.Context, accountUUID string, request domain.VerifyOTPRequest) error {
 	panic("not implemented")
 }
 
