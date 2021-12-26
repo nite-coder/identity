@@ -27,7 +27,7 @@ func (repo *AccountRepo) Account(ctx context.Context, namespace string, accountI
 
 	var account domain.Account
 
-	if err := db.Where("id = ?", accountID).Where("namespace = ?", namespace).Find(&account).Error; err != nil {
+	if err := db.Where("id = ?", accountID).Where("namespace = ?", namespace).First(&account).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
@@ -44,7 +44,7 @@ func (repo *AccountRepo) AccountByUUID(ctx context.Context, namespace string, uu
 
 	var account domain.Account
 
-	if err := db.Where("uuid = ?", uuid).Where("namespace = ?", namespace).Find(&account).Error; err != nil {
+	if err := db.Where("uuid = ?", uuid).Where("namespace = ?", namespace).First(&account).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
@@ -228,12 +228,24 @@ func (repo *AccountRepo) AccountsByRoleID(ctx context.Context, namespace string,
 	logger := log.FromContext(ctx)
 	db := database.FromContext(ctx)
 
-	account := domain.Account{}
-	accountRoles := domain.AccountRole{}
-	joinStr := fmt.Sprintf("left join `%s` on `%s`.account_id = `%s`.id", accountRoles.TableName(), accountRoles.TableName(), account.TableName())
+	stmt := db.Statement
+
+	err := stmt.Parse(&domain.Account{})
+	if err != nil {
+		return nil, err
+	}
+	accountTable := stmt.Schema.Table
+
+	err = stmt.Parse(&domain.AccountRole{})
+	if err != nil {
+		return nil, err
+	}
+	accountRolesTable := stmt.Schema.Table
+
+	joinStr := fmt.Sprintf("left join `%s` on `%s`.account_id = `%s`.id", accountRolesTable, accountRolesTable, accountTable)
 
 	var accounts []domain.Account
-	err := db.Model(domain.Account{}).
+	err = db.Model(domain.Account{}).
 		Joins(joinStr).
 		Where("role_id = ?", roleID).
 		Where("namespace = ?", namespace).

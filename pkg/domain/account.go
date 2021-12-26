@@ -16,11 +16,6 @@ const (
 	SystemID   = 0
 )
 
-var (
-	TableNameAccount     = "accounts"
-	TableNameAccountRole = "accounts_roles"
-)
-
 type AccountState int32
 
 func (state AccountState) String() string {
@@ -39,9 +34,9 @@ func (state AccountState) String() string {
 // Account represent account information
 type Account struct {
 	ID                    uint64         `gorm:"column:id;primaryKey;autoIncrement;not null"`
-	UUID                  string         `gorm:"column:uuid;type:char(36);size:36;uniqueIndex:uniq_uuid;not null"`
-	Namespace             string         `gorm:"column:namespace;type:string;size:256;uniqueIndex:uniq_username;uniqueIndex:uniq_email;uniqueIndex:uniq_mobile;not null"`
-	Type                  int32          `gorm:"column:type;type:int;not null"`
+	UUID                  string         `gorm:"column:uuid;type:char(36); size:36; uniqueIndex:uniq_uuid; default:''; not null"`
+	Namespace             string         `gorm:"column:namespace; type:string; size:256; uniqueIndex:uniq_username; uniqueIndex:uniq_email; uniqueIndex:uniq_mobile; default:''; not null"`
+	Type                  int32          `gorm:"column:type;type:int; default:0; not null"`
 	Username              sql.NullString `gorm:"column:username;type:string;size:24;uniqueIndex:uniq_username;"`
 	PasswordEncrypt       string         `gorm:"column:password_encrypt;type:string;size:128;not null"`
 	NickName              string         `gorm:"column:nick_name;type:string;size:24;not null"`
@@ -65,25 +60,16 @@ type Account struct {
 	StateChangedAt        time.Time      `gorm:"column:state_changed_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	Version               uint32         `gorm:"column:version;type:int;not null"`
 	CreatorID             uint64         `gorm:"column:creator_id;type:bigint;not null"`
-	CreatorName           string         `gorm:"column:creator_name;type:string;size:32;not null"`
+	CreatorName           string         `gorm:"column:creator_name;type:string;size:32;default:'';not null"`
 	CreatedAt             time.Time      `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 	UpdaterID             uint64         `gorm:"column:updater_id;type:bigint;not null"`
-	UpdaterName           string         `gorm:"column:updater_name;type:string;size:32;not null"`
+	UpdaterName           string         `gorm:"column:updater_name;type:string;size:32;default:'';not null"`
 	UpdatedAt             time.Time      `gorm:"column:updated_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
-}
-
-// TableName 用來取 Account 的資料表名稱
-func (a *Account) TableName() string {
-	return TableNameAccount
 }
 
 type AccountRole struct {
 	AccountID uint64 `gorm:"primaryKey;not null"`
 	RoleID    uint64 `gorm:"primaryKey;not null"`
-}
-
-func (a *AccountRole) TableName() string {
-	return TableNameAccountRole
 }
 
 // FindAccountOptions 用來查詢 Account 的選項

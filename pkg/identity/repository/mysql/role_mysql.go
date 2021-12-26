@@ -77,7 +77,7 @@ func (repo *RoleRepo) Role(ctx context.Context, namespace string, id uint64) (*d
 	db := database.FromContext(ctx)
 
 	role := domain.Role{}
-	err := db.Model(domain.Role{}).Where("id = ?", id).Where("namespace = ?", namespace).Find(&role).Error
+	err := db.Model(domain.Role{}).Where("id = ?", id).Where("namespace = ?", namespace).First(&role).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("mysql: role id %d was not found. %w", id, domain.ErrNotFound)
@@ -93,10 +93,24 @@ func (repo *RoleRepo) RolesByAccountID(ctx context.Context, namespace string, ac
 	//logger := log.FromContext(ctx)
 	db := database.FromContext(ctx)
 
-	joinStr := fmt.Sprintf("left join `%s` on `%s`.role_id = `%s`.id", domain.TableNameAccountRole, domain.TableNameAccountRole, domain.TableNameRoles)
+	stmt := db.Statement
+
+	err := stmt.Parse(&domain.Role{})
+	if err != nil {
+		return nil, err
+	}
+	roleTable := stmt.Schema.Table
+
+	err = stmt.Parse(&domain.AccountRole{})
+	if err != nil {
+		return nil, err
+	}
+	accountRolesTable := stmt.Schema.Table
+
+	joinStr := fmt.Sprintf("left join `%s` on `%s`.role_id = `%s`.id", accountRolesTable, accountRolesTable, roleTable)
 
 	roles := []domain.Role{}
-	err := db.Model(domain.Role{}).
+	err = db.Model(domain.Role{}).
 		Joins(joinStr).
 		Where("account_id = ?", accountID).
 		Where("namespace = ?", namespace).

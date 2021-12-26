@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-var (
-	TableNamePermission = "permissions"
-)
 
 type Permission struct {
 	ID          uint64    `gorm:"column:id;primaryKey;autoIncrement;not null"`
@@ -19,9 +16,7 @@ type Permission struct {
 	CreatedAt   time.Time `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 }
 
-func (p *Permission) TableName() string {
-	return TableNamePermission
-}
+
 
 type PermissionUsecase interface {
 	PermissionsByAccountID(ctx context.Context, namespace string, accountID uint64) ([]Permission, error)

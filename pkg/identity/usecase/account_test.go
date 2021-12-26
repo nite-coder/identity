@@ -17,6 +17,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
 
 type AccountTestSuite struct {
@@ -81,11 +82,11 @@ func TestAccountTestSuite(t *testing.T) {
 }
 
 func (suite *AccountTestSuite) SetupTest() {
-	domain.TableNameEventLog = "event_logs" + "_" + uuid.NewString()
-	domain.TableNameAccount = "accounts" + "_" + uuid.NewString()
-	domain.TableNameAccountRole = "accounts_roles" + "_" + uuid.NewString()
-	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
-	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
+	prefix := uuid.NewString()
+	suite.db.NamingStrategy = schema.NamingStrategy{
+		TablePrefix:   prefix + "_", // table name prefix, table for `User` would be `t_users`
+		SingularTable: true,         // use singular table name, table for `User` would be `user` with this option enabled
+	}
 
 	err := suite.db.Set("gorm:table_options", "AUTO_INCREMENT=100000").AutoMigrate(domain.Account{})
 	suite.Require().NoError(err)
@@ -94,16 +95,10 @@ func (suite *AccountTestSuite) SetupTest() {
 
 }
 
-func (suite *AccountTestSuite) TearDownTest() {
-	domain.TableNameEventLog = "event_logs" + "_" + uuid.NewString()
-	domain.TableNameAccount = "accounts" + "_" + uuid.NewString()
-	domain.TableNameAccountRole = "accounts_roles" + "_" + uuid.NewString()
-	domain.TableNameRoles = "roles" + "_" + uuid.NewString()
-	domain.TableNamePermission = "permission" + "_" + uuid.NewString()
-
-	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
-	suite.Require().NoError(err)
-}
+// func (suite *AccountTestSuite) TearDownTest() {
+// 	err := suite.db.Migrator().DropTable(domain.EventLog{}, domain.Account{}, domain.AccountRole{}, domain.Role{}, domain.Permission{}, domain.LoginLog{})
+// 	suite.Require().NoError(err)
+// }
 
 func (suite *AccountTestSuite) TestCRUDAccount() {
 	ctx := context.Background()

@@ -15,9 +15,7 @@ const (
 	EventLogFail    EventLogState = 2
 )
 
-var (
-	TableNameEventLog = "event_logs"
-)
+
 
 type EventLog struct {
 	ID        uint64         `gorm:"column:id;primaryKey;autoIncrement;not null"`
@@ -33,9 +31,7 @@ type EventLog struct {
 	CreatedAt time.Time      `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 }
 
-func (e *EventLog) TableName() string {
-	return TableNameEventLog
-}
+
 
 type EventLogRepository interface {
 	CreateEventLog(ctx context.Context, eventLog *EventLog) error

@@ -13,9 +13,7 @@ const (
 	RoleStatusDisabled RoleState = 2
 )
 
-var (
-	TableNameRoles = "roles"
-)
+
 
 // Role 代表角色資訊
 type Role struct {
@@ -33,10 +31,7 @@ type Role struct {
 	UpdatedAt   time.Time `gorm:"column:updated_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
 }
 
-// TableName gorm callback function, get table name
-func (r *Role) TableName() string {
-	return TableNameRoles
-}
+
 
 // FindRolesOptions 用來當查詢 Roles 的條件
 type FindRoleOptions struct {
