@@ -2,14 +2,13 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"time"
-
-	errPKG "github.com/rotisserie/eris"
 )
 
 var (
 	// ErrKeyNotFound returns errors.ResourceNotFound
-	ErrKeyNotFound = errPKG.New("key not found")
+	ErrKeyNotFound = errors.New("key not found")
 )
 
 // Claims 用來代表登入後的資料

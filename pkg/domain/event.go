@@ -10,7 +10,7 @@ import (
 type EventLogState uint32
 
 const (
-	EventLogNone    EventLogState = 0
+	EventLogDefault    EventLogState = 0
 	EventLogSuccess EventLogState = 1
 	EventLogFail    EventLogState = 2
 )
@@ -28,7 +28,7 @@ type EventLog struct {
 	State     EventLogState  `gorm:"column:state;type:int;not null"`
 	ClientIP  string         `gorm:"column:client_ip;type:string;size:64;not null"`
 	Actor     string         `gorm:"column:actor;type:string;size:32;not null"`
-	CreatedAt time.Time      `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	CreatedAt time.Time      `gorm:"column:created_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 }
 
 

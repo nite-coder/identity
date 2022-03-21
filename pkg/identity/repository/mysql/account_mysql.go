@@ -119,9 +119,8 @@ func (repo *AccountRepo) UpdateAccount(ctx context.Context, account *domain.Acco
 	args["version"] = gorm.Expr(global.VersionAddOne)
 
 	result := db.Model(account).
-		Where("id = ?", account.ID).
-		Where("version = @version", sql.Named("version", account.Version)).
-		Updates(args)
+		Updates(args).
+		Where("version = @version", sql.Named("version", account.Version))
 
 	err := result.Error
 	if err != nil {
@@ -147,9 +146,8 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 	args["version"] = gorm.Expr(global.VersionAddOne)
 
 	result := db.Model(account).
-		Where("id = ?", account.ID).
-		Where("version = @version", sql.Named("version", account.Version)).
-		Updates(args)
+		Updates(args).
+		Where("version = @version", sql.Named("version", account.Version))
 
 	err := result.Error
 	if err != nil {
@@ -177,9 +175,8 @@ func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Accoun
 	args["version"] = gorm.Expr(global.VersionAddOne)
 
 	result := db.Model(account).
-		Where("id = ?", account.ID).
-		Where("version = @version", sql.Named("version", account.Version)).
-		Updates(args)
+		Updates(args).
+		Where("version = @version", sql.Named("version", account.Version))
 
 	err := result.Error
 	if err != nil {

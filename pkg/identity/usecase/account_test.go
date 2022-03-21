@@ -36,10 +36,10 @@ func TestAccountTestSuite(t *testing.T) {
 	dbLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second,   // Slow SQL threshold
-			LogLevel:                  logger.Silent, // Log level
-			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
-			Colorful:                  true,          // Disable color
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			Colorful:                  true,        // Disable color
 		},
 	)
 
@@ -349,6 +349,7 @@ func (suite *AccountTestSuite) TestLogin() {
 
 		login := domain.LoginInfo{
 			Namespace: suite.namespace,
+			LoginType: domain.LoginTypeUsername,
 			Username:  "halo",
 			Password:  "123456",
 			ClientIP:  "182.48.113.104",
@@ -394,6 +395,7 @@ func (suite *AccountTestSuite) TestChangePassword() {
 
 		login := domain.LoginInfo{
 			Namespace: suite.namespace,
+			LoginType: domain.LoginTypeUsername,
 			Username:  "halo",
 			Password:  newPassword1,
 			ClientIP:  "",
@@ -415,6 +417,7 @@ func (suite *AccountTestSuite) TestChangePassword() {
 
 		login := domain.LoginInfo{
 			Namespace: suite.namespace,
+			LoginType: domain.LoginTypeUsername,
 			Username:  "halo",
 			Password:  newPassword2,
 		}

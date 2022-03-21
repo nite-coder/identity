@@ -245,7 +245,7 @@ func (uc *AccountUsecase) ChangeState(ctx context.Context, request domain.Change
 }
 
 func (uc *AccountUsecase) Login(ctx context.Context, request domain.LoginInfo) (*domain.Account, error) {
-	if len(request.Namespace) == 0 && len(request.Username) == 0 && request.Email == "" && (request.Mobile == "" || request.MobileCountryCode == "") {
+	if len(request.Namespace) == 0 || request.LoginType == domain.LoginTypeDefault {
 		return nil, domain.ErrInvalidInput
 	}
 
@@ -255,10 +255,22 @@ func (uc *AccountUsecase) Login(ctx context.Context, request domain.LoginInfo) (
 
 	switch request.LoginType {
 	case domain.LoginTypeUsername:
+		if len(request.Username) == 0 {
+			return nil, domain.ErrInvalidInput
+		}
+
 		opts.Username = request.Username
 	case domain.LoginTypeEmail:
+		if len(request.Email) == 0 {
+			return nil, domain.ErrInvalidInput
+		}
+
 		opts.Email = request.Email
 	case domain.LoginTypeMobile:
+		if len(request.MobileCountryCode) == 0 && len(request.Mobile) == 0 {
+			return nil, domain.ErrInvalidInput
+		}
+
 		opts.MobileCountryCode = request.MobileCountryCode
 		opts.Mobile = request.Mobile
 	}

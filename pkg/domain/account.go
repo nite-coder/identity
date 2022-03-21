@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	AccountStatusNone     AccountState = 0
+	AccountStatusDefault  AccountState = 0
 	AccountStatusNormal   AccountState = 1 //狀態正常
 	AccountStatusDisabled AccountState = 2 //人工鎖定
 	AccountStatusLocked   AccountState = 3 //密碼錯誤次數過多
@@ -50,20 +50,20 @@ type Account struct {
 	FailedPasswordAttempt int32          `gorm:"column:failed_password_attempt;type:int;not null"`
 	OTPEnable             int32          `gorm:"column:otp_enable;type:tinyint;not null"`
 	OTPSecret             string         `gorm:"column:otp_secret;type:string;size:64;not null"`
-	OTPLastResetAt        time.Time      `gorm:"column:otp_last_reset_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	OTPLastResetAt        time.Time      `gorm:"column:otp_last_reset_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 	ClientIP              string         `gorm:"column:client_ip;type:string;size:64;not null"`
 	Note                  string         `gorm:"column:notes;type:string;size:512;not null"`
 	LastLoginAt           time.Time      `gorm:"column:last_login_at;type:datetime;not null"`
 	IsAdmin               int32          `gorm:"column:is_admin;type:tinyint;not null"`
 	State                 AccountState   `gorm:"column:state;type:int;not null"`
-	StateChangedAt        time.Time      `gorm:"column:state_changed_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	StateChangedAt        time.Time      `gorm:"column:state_changed_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 	Version               uint32         `gorm:"column:version;type:int;not null"`
 	CreatorID             uint64         `gorm:"column:creator_id;type:bigint;not null"`
 	CreatorName           string         `gorm:"column:creator_name;type:string;size:32;default:'';not null"`
-	CreatedAt             time.Time      `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	CreatedAt             time.Time      `gorm:"column:created_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 	UpdaterID             uint64         `gorm:"column:updater_id;type:bigint;not null"`
 	UpdaterName           string         `gorm:"column:updater_name;type:string;size:32;default:'';not null"`
-	UpdatedAt             time.Time      `gorm:"column:updated_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	UpdatedAt             time.Time      `gorm:"column:updated_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 }
 
 type AccountRole struct {
@@ -169,7 +169,7 @@ type LoginLog struct {
 	DeviceType  DeviceType    `gorm:"column:device_type;type:int;not null"`
 	State       LoginLogState `gorm:"column:state;type:int;not null"`
 	ClientIP    string        `gorm:"column:client_ip;type:string;size:64;not null"`
-	CreatedAt   time.Time     `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	CreatedAt   time.Time     `gorm:"column:created_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 }
 
 type AddRolesToAccountRequest struct {

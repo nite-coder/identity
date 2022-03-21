@@ -13,7 +13,7 @@ type Permission struct {
 	AccountID   uint64    `gorm:"column:account_id;type:bigint;uniqueIndex:uniq_code;not null"`
 	CreatorID   uint64    `gorm:"column:creator_id;type:bigint;not null"`
 	CreatorName string    `gorm:"column:creator_name;type:string;size:32;not null"`
-	CreatedAt   time.Time `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	CreatedAt   time.Time `gorm:"column:created_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 }
 
 

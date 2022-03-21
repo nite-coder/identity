@@ -8,12 +8,10 @@ import (
 type RoleState uint32
 
 const (
-	RoleStatusNone     RoleState = 0
+	RoleStatusDefault  RoleState = 0
 	RoleStatusNormal   RoleState = 1
 	RoleStatusDisabled RoleState = 2
 )
-
-
 
 // Role 代表角色資訊
 type Role struct {
@@ -25,13 +23,11 @@ type Role struct {
 	Version     uint32    `gorm:"column:version;type:int;not null"`
 	CreatorID   uint64    `gorm:"column:creator_id;type:bigint;not null"`
 	CreatorName string    `gorm:"column:creator_name;type:string;size:32;not null"`
-	CreatedAt   time.Time `gorm:"column:created_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	CreatedAt   time.Time `gorm:"column:created_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 	UpdaterID   uint64    `gorm:"column:updater_id;type:bigint;not null"`
 	UpdaterName string    `gorm:"column:updater_name;type:string;size:32;not null"`
-	UpdatedAt   time.Time `gorm:"column:updated_at;type:datetime;default:'1970-01-01 00:00:00';not null"`
+	UpdatedAt   time.Time `gorm:"column:updated_at;type:datetime;default:1970-01-01 00:00:00;not null"`
 }
-
-
 
 // FindRolesOptions 用來當查詢 Roles 的條件
 type FindRoleOptions struct {
