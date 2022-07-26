@@ -10,13 +10,13 @@ services:
       - $LOCAL_WORKSPACE_FOLDER/data/mysql:/var/lib/mysql
     ports:
       - 3306:3306
-  # redis:
-  #   image: redis:6
-  #   ports:
-  #     - 6379:6379
-  # identity:
-  #   build: 
-  #     context: .
-  #     dockerfile: ./build/docker/dockerfile
-  #   ports:
-  #     - 12568:12568
+  redis:
+    image: redis:7
+    ports:
+      - 6379:6379
+  identity:
+    build:
+      context: .
+      dockerfile: ./build/docker/dockerfile
+    ports:
+      - 12568:12568

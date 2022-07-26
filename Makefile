@@ -5,10 +5,10 @@ lint:
 	- docker run --rm -v ${LOCAL_WORKSPACE_FOLDER}:/app -w /app golangci/golangci-lint:v1.41-alpine golangci-lint run ./... -v
 
 infra:
-	- docker-compose -f docker-compose-infra.yml up -d
+	- docker-compose -f docker-compose.yml up -d
 
 infra-down:
-	- docker-compose -f docker-compose-infra.yml down
+	- docker-compose -f docker-compose.yml down
 
 test:
 	go test -race -coverprofile=cover.out -covermode=atomic ./...

@@ -24,7 +24,7 @@ func (repo *EventLogRepo) CreateEventLog(ctx context.Context, eventLog *domain.E
 
 	err := db.Create(eventLog).Error
 	if err != nil {
-		logger.Err(err).Interface("params", eventLog).Error("mysql: create eventLog fail")
+		logger.Err(err).Any("params", eventLog).Error("mysql: create eventLog fail")
 		return err
 	}
 

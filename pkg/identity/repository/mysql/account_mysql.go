@@ -32,7 +32,7 @@ func (repo *AccountRepo) Account(ctx context.Context, namespace string, accountI
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
-		logger.Err(err).Interface("params", accountID).Error("mysql: get account failed.")
+		logger.Err(err).Any("params", accountID).Error("mysql: get account failed.")
 		return &account, err
 	}
 
@@ -49,7 +49,7 @@ func (repo *AccountRepo) AccountByUUID(ctx context.Context, namespace string, uu
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &account, fmt.Errorf("mysql: account not found. %w", domain.ErrNotFound)
 		}
-		logger.Err(err).Interface("params", uuid).Error("mysql: get account by uuid failed.")
+		logger.Err(err).Any("params", uuid).Error("mysql: get account by uuid failed.")
 		return &account, err
 	}
 
@@ -65,7 +65,7 @@ func (repo *AccountRepo) Accounts(ctx context.Context, opts domain.FindAccountOp
 	db = repo.buildWhereClause(db, opts)
 
 	if err := db.Find(&accounts).Error; err != nil {
-		logger.Err(err).Interface("params", opts).Error("mysql: get accounts failed")
+		logger.Err(err).Any("params", opts).Error("mysql: get accounts failed")
 		return nil, err
 	}
 
@@ -86,7 +86,7 @@ func (repo *AccountRepo) CreateAccount(ctx context.Context, account *domain.Acco
 				return fmt.Errorf("mysql: the account has already exists.  %w", domain.ErrAlreadyExists)
 			}
 		}
-		logger.Err(err).Interface("params", account).Error("mysql: create account fail")
+		logger.Err(err).Any("params", account).Error("mysql: create account fail")
 		return err
 	}
 
@@ -151,7 +151,7 @@ func (repo *AccountRepo) UpdateAccountPassword(ctx context.Context, account *dom
 
 	err := result.Error
 	if err != nil {
-		logger.Err(err).Interface("params", account).Error("mysql:update account password failed")
+		logger.Err(err).Any("params", account).Error("mysql:update account password failed")
 		return err
 	}
 
@@ -180,7 +180,7 @@ func (repo *AccountRepo) UpdateState(ctx context.Context, account *domain.Accoun
 
 	err := result.Error
 	if err != nil {
-		logger.Err(err).Interface("param", account).Error("mysql: update state failed")
+		logger.Err(err).Any("param", account).Error("mysql: update state failed")
 	}
 
 	if result.RowsAffected == 0 {
@@ -203,7 +203,7 @@ func (repo *AccountRepo) CountAccounts(ctx context.Context, options domain.FindA
 	db = db.Model(domain.Account{})
 
 	if err := repo.buildWhereClause(db, options).Count(&total).Error; err != nil {
-		logger.Err(err).Interface("params", options).Error("mysql: count account failed.")
+		logger.Err(err).Any("params", options).Error("mysql: count account failed.")
 		return 0, err
 	}
 

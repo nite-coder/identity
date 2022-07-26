@@ -35,7 +35,7 @@ func (repo *RoleRepo) CreateRole(ctx context.Context, role *domain.Role) error {
 				return fmt.Errorf("mysql: the role has already exists.  %w", domain.ErrAlreadyExists)
 			}
 		}
-		logger.Err(err).Interface("params", role).Error("mysql: create role fail")
+		logger.Err(err).Any("params", role).Error("mysql: create role fail")
 		return err
 	}
 
@@ -83,7 +83,7 @@ func (repo *RoleRepo) Role(ctx context.Context, namespace string, id uint64) (*d
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("mysql: role id %d was not found. %w", id, domain.ErrNotFound)
 		}
-		logger.Err(err).Interface("params", role).Error("mysql: get role fail")
+		logger.Err(err).Any("params", role).Error("mysql: get role fail")
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func (repo *RoleRepo) Roles(ctx context.Context, opts domain.FindRoleOptions) ([
 	db = repo.buildWhereClause(db, opts)
 
 	if err := db.Find(&roles).Error; err != nil {
-		logger.Err(err).Interface("params", opts).Error("mysql: get roles failed")
+		logger.Err(err).Any("params", opts).Error("mysql: get roles failed")
 		return nil, err
 	}
 
